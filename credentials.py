@@ -307,6 +307,36 @@ def do_rsa(api_id, api_hash):
 
 
 # =========================================================== status
+async def session_authorised():
+    """(authorised, user_id, first_name).
+
+    A .session file exists long before it holds a valid auth key — Telethon
+    creates one on connect. So check with Telegram, not with os.path.
+    """
+    from telethon import TelegramClient
+
+    if config.credentials_missing():
+        return None, None, None
+    if not (ROOT / f"{config.SESSION_NAME}.session").exists():
+        return False, None, None
+
+    client = TelegramClient(
+        str(ROOT / config.SESSION_NAME), config.API_ID, config.API_HASH,
+        connection_retries=1,
+    )
+    await client.connect()
+    try:
+        if not await client.is_user_authorized():
+            return False, None, None
+        me = await client.get_me()
+        return True, me.id, me.first_name
+    finally:
+        try:
+            await client.disconnect()
+        except Exception:
+            pass
+
+
 def do_status():
     say(f"\n{CYN}==> Status{OFF}")
     env = env_dict()
@@ -316,16 +346,24 @@ def do_status():
         warn(f"using shared credentials ({config.SHARED_API_ID})")
     else:
         bad("no API_ID/API_HASH")
+
     if env.get("OWNER_ID"):
         ok(f"OWNER_ID={env['OWNER_ID']}")
     else:
         bad("OWNER_ID unset — owner-gated commands stay locked")
 
-    sess = ROOT / f"{config.SESSION_NAME}.session"
-    if sess.exists():
-        ok(f"session present ({sess.name})")
+    authed, uid, name = asyncio.run(session_authorised())
+    if authed:
+        ok(f"logged in as {name} ({uid})")
     else:
-        bad("not logged in")
+        sess = ROOT / f"{config.SESSION_NAME}.session"
+        if sess.exists():
+            bad("session file exists but Telegram rejects it — not logged in")
+            say(f"    {DIM}Run: python login_helper.py{OFF}")
+        else:
+            bad("not logged in")
+            say(f"    {DIM}Run: python login_helper.py{OFF}")
+
     if RSA_PATH.exists():
         try:
             n = len(json.loads(RSA_PATH.read_text())["keys"])
@@ -333,7 +371,7 @@ def do_status():
         except Exception:
             bad("rsa_keys.json is corrupt")
     else:
-        bad("no CDN RSA keys yet")
+        warn("no CDN RSA keys yet (needs a logged-in session)")
 
 
 # =========================================================== main

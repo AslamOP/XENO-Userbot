@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  xeno:
+    build: .
+    image: xeno-userbot:latest
+    container_name: xeno-userbot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    # Telegram uses long-poll MTProto, not a fixed port; no ports needed.
+    # NOTE: SESSION_FILE/DOWNLOADS_DIR were never read by config.py — the session
+    # path comes from SESSION_NAME and downloads/ lives beside main.py.

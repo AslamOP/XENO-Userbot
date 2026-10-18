@@ -1,0 +1,39 @@
+[Unit]
+Description=XENO - Telegram userbot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/xeno
+Environment=PATH=/home/ubuntu/xeno/venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/home/ubuntu/xeno/venv/bin/python /home/ubuntu/xeno/main.py
+
+# Restart on crash, and on clean exit (e.g. /restart re-exec).
+Restart=always
+RestartSec=10
+# Give the process time to flush its debounced db writes on SIGTERM.
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# This box has 908 MiB of RAM. Cap the service so a runaway plugin can't take
+# the host down with it, and let it use a little swap when it needs to.
+MemoryMax=450M
+MemorySwapMax=1G
+
+# Hardening. main.py writes only to ./data and ./downloads.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/ubuntu/xeno
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=xeno
+
+[Install]
+WantedBy=multi-user.target

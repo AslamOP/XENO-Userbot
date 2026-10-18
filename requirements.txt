@@ -1,0 +1,10 @@
+telethon==1.45.0
+python-dotenv==1.1.0
+aiohttp>=3.11.18
+qrcode==8.2
+
+# Image effects (plugins/photofx.py) only. Optional: photofx skips itself if
+# this can't be imported, so a machine without a Pillow wheel still runs
+# everything else. Unpinned on purpose — the pinned 11.2.1 has no cp313/cp314
+# wheels and would fall back to a source build.
+Pillow>=11

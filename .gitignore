@@ -1,0 +1,49 @@
+# --- Secrets. Never commit these. -----------------------------------------
+# .env holds API_ID/API_HASH, OWNER_ID, and the assistant bot token.
+.env
+.env.*
+!.env.example
+
+# A Telethon .session file IS the account: whoever holds it reads your chats
+# with no code and no password. Treat committing one as publishing the account.
+*.session
+*.session-journal
+
+# --- Python ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# --- Virtualenvs ----------------------------------------------------------
+venv/
+.venv/
+env/
+ENV/
+
+# --- Runtime state --------------------------------------------------------
+# data/ holds the JSON database, the plugin registry, and rotating logs.
+data/
+# downloads/ is the file store — whatever you saved through .save lives here.
+downloads/
+# addons/ is .install'd third-party code. It's yours and nobody else's, and
+# it's arbitrary code — it does not belong in version control.
+addons/
+*.log
+*.log.*
+xeno.log
+xeno.log.*
+userbot.pid
+*.pid
+
+# --- Editor / OS ----------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db

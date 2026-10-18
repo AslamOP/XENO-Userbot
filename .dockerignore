@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+.venv/
+venv/
+env/
+data/
+downloads/
+userbot_session.session
+*.log
+.ipynb_checkpoints
+Dockerfile
+docker-compose.yml
+.dockerignore
+README.md

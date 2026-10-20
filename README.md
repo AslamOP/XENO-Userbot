@@ -1,7 +1,7 @@
 # XENO — Python Telegram userbot
 
 > ## 🧪 ALPHA
-> **Not production-ready, and not audited.** It boots, and 283 offline checks
+> **Not production-ready, and not audited.** It boots, and 304 offline checks
 > pass, but it has never been run against a live account by anyone but its
 > author. `.install` executes arbitrary code as this process, and installed
 > plugins can read `*.session` — that file *is* your account.
@@ -75,6 +75,13 @@ Two deliberate divergences from Ultroid:
   authoritative and `.env` is best-effort.
 
 Set `BOT_TOKEN` to skip BotFather entirely.
+
+## Updates
+
+`.update` — pull latest from git, verify imports/tests, restart with automatic rollback if verification fails.  
+`.upcheck` — check for available updates without applying.  
+`.rollback` — revert to last known good commit.  
+Uses `update.sh` with built-in safety checks.
 
 ## Autonomous ("ambient") handlers are OFF by default
 

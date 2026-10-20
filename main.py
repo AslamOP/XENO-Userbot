@@ -46,8 +46,21 @@ async def main():
     # because @asst_cmd registers handlers on it at import time.
     await assistant_mod.start_assistant(bot, log_channel=config.LOG_CHAT_ID or None)
 
+    # Set the assistant's profile pic via BotFather (Ultroid's customize()).
+    if assistant_mod.asst:
+        await assistant_mod.customize(
+            bot, assistant_mod.asst, log_channel=config.LOG_CHAT_ID or None
+        )
+
     # Load plugins
     load_plugins()
+
+    # Startup banner to the log channel (Ultroid's ready()).
+    await assistant_mod.ready(
+        assistant_mod.asst,
+        log_channel=config.LOG_CHAT_ID or None,
+        user_client=bot,
+    )
 
     log.info(f"Starting userbot as {me.username or me.id}… Run `Ctrl+C` to stop.")
     try:

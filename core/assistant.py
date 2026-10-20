@@ -236,6 +236,85 @@ async def _stored_token():
     return await db_get("ASSISTANT_TOKEN", "") or config.BOT_TOKEN
 
 
+_LOGO_PATH = "resources/assistant_logo.jpg"
+_BANNER_PATH = "resources/xeno_banner.jpg"
+
+
+async def customize(user_client, assistant_client, log_channel=None):
+    """Set the assistant's profile picture via BotFather (Ultroid's customize()).
+
+    Bots cannot set their own avatar — UploadProfilePhotoRequest only works on
+    user accounts — so the user client drives @BotFather exactly the way
+    Ultroid's pyUltroid/startup/funcs.py customize() does. Skipped entirely if
+    the bot already has a photo, so it runs at most once per deployment.
+    """
+    if not assistant_client or not assistant_client.is_connected():
+        return
+    try:
+        me = await assistant_client.get_me()
+        if me.photo:
+            return
+        if not me.username:
+            log.info("Assistant has no username; cannot set profile pic.")
+            return
+        import os
+
+        if not os.path.exists(_LOGO_PATH):
+            log.warning(f"Assistant logo missing at {_LOGO_PATH}; skipping.")
+            return
+        log.info("Customising assistant profile picture via @BotFather")
+        for step in ("/cancel", "/setuserpic", f"@{me.username}"):
+            await user_client.send_message("BotFather", step)
+            await asyncio.sleep(1.2)
+        await user_client.send_file("BotFather", _LOGO_PATH)
+        await asyncio.sleep(2)
+        log.info("Assistant profile picture set via @BotFather")
+    except Exception as e:
+        log.warning(f"Assistant profile-pic customisation failed ({type(e).__name__}: {e})")
+
+
+async def ready(assistant_client, log_channel=None, user_client=None):
+    """Send the XENO startup banner to the log channel (Ultroid's ready()).
+
+    Mirrors pyUltroid/startup/funcs.py ready(): the assistant delivers the
+    boot message with the banner image attached. Falls back to the user
+    client if the assistant is unavailable.
+    """
+    if not log_channel:
+        return
+    if assistant_client and assistant_client.is_connected():
+        sender = assistant_client
+    else:
+        sender = user_client
+    if not sender:
+        return
+    me = await user_client.get_me() if user_client else None
+    who = f"@{me.username}" if me and me.username else (me.first_name if me else "unknown")
+    asst_me = await assistant_client.get_me() if assistant_client else None
+    asst_tag = f"@{asst_me.username}" if asst_me and asst_me.username else "offline"
+    try:
+        from plugins.commander import VERSION
+    except Exception:
+        VERSION = "2.1.0-alpha"
+    msg = (
+        f"**XENO is live!**\n"
+        f"➖➖➖➖➖➖➖➖➖➖\n"
+        f"**UserMode**: {who}\n"
+        f"**Assistant**: {asst_tag}\n"
+        f"➖➖➖➖➖➖➖➖➖➖\n"
+        f"**Version**: `{VERSION}`\n"
+        f"➖➖➖➖➖➖➖➖➖➖"
+    )
+    import os
+
+    photo = _BANNER_PATH if os.path.exists(_BANNER_PATH) else None
+    try:
+        await sender.send_message(log_channel, msg, file=photo)
+        log.info("Startup banner sent to log channel.")
+    except Exception as e:
+        log.warning(f"Startup banner failed ({type(e).__name__}: {e})")
+
+
 async def start_assistant(user_client, log_channel=None):
     """Start the assistant client. Never raises — returns (client, status)."""
     global asst, status

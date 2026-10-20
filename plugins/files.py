@@ -5,7 +5,7 @@ across media.py, extras.py, tools.py and manage.py, with the download path
 written out three separate times.
 
   .save [name]          reply to media      -> downloads/     (.download, .savefile)
-  .get <name>           send a stored file back
+  .fetch <name>         send a stored file back               (was .get — now reserved for config)
   .ls                   list the store                    (.files)
   .delfile <name> force delete a stored file              (.rm)
   .fileinfo             metadata for replied media
@@ -155,7 +155,7 @@ async def _deny(event, what):
     from core.auth import is_owner
 
     if not await is_owner(event):
-        await event.reply(f"🔒 Owner only — {what}.")
+        await event.eor(f"🔒 Owner only — {what}.")
         return True
     return False
 
@@ -178,15 +178,15 @@ async def save_cmd(event):
     if await _deny(event, "this writes to the server"):
         return
     if not event.reply_to:
-        return await event.reply("Reply to a file or photo to store it.")
+        return await event.eor("Reply to a file or photo to store it.")
 
     rep = await event.get_reply_message()
     if not getattr(rep, "media", None):
-        return await event.reply("That message has no media.")
+        return await event.eor("That message has no media.")
 
     size = getattr(getattr(rep, "document", None), "size", 0) or 0
     if size > MAX_SAVE_BYTES:
-        return await event.reply(
+        return await event.eor(
             f"❌ Too big ({_human(size)}). Limit is {_human(MAX_SAVE_BYTES)}."
         )
 
@@ -194,7 +194,7 @@ async def save_cmd(event):
     if name:
         err = filename_error(name)
         if err:
-            return await event.reply(f"❌ {err}")
+            return await event.eor(f"❌ {err}")
         if "." not in name:
             name += ".bin"
     else:
@@ -204,23 +204,23 @@ async def save_cmd(event):
     try:
         path = await rep.download_media(file=STORE)
         if not path:
-            return await event.reply("❌ Download failed.")
+            return await event.eor("❌ Download failed.")
         target = unique_path(name)
         if os.path.abspath(path) != os.path.abspath(target):
             os.replace(path, target)
         actual = os.path.basename(target)
-        await event.reply(
+        await event.eor(
             f"💾 `{actual}` stored ({_human(os.path.getsize(target))}).\n"
-            f"`.get {actual}` to send it back · `.ls` to list · "
+            f"`.fetch {actual}` to send it back · `.ls` to list · "
             f"`.delfile {actual} force`"
         )
     except Exception as e:
-        await event.reply(f"❌ `{type(e).__name__}: {e}`")
+        await event.eor(f"❌ `{type(e).__name__}: {e}`")
 
 
-@command(r"get\s+(\S+)")
-async def get_cmd(event):
-    """Send a stored file into this chat. Usage: `.get <name>`"""
+@command(r"fetch\s+(\S+)")
+async def fetch_cmd(event):
+    """Send a stored file into this chat. Usage: `.fetch <name>`"""
     if await _deny(event, "this reads files off the server"):
         return
     name = event.pattern_match.group(1)
@@ -228,13 +228,13 @@ async def get_cmd(event):
     if not path:
         rows = list_store(10)
         hint = ", ".join(r[0] for r in rows) or "store is empty"
-        return await event.reply(f"❌ No stored file called `{name}`.\nAvailable: {hint}")
+        return await event.eor(f"❌ No stored file called `{name}`.\nAvailable: {hint}")
     try:
         await event.client.send_file(
             event.chat_id, path, force_document=True, file_name=os.path.basename(path)
         )
     except Exception as e:
-        await event.reply(f"❌ `{type(e).__name__}: {e}`")
+        await event.eor(f"❌ `{type(e).__name__}: {e}`")
 
 
 @command("ls")
@@ -244,11 +244,11 @@ async def ls_cmd(event):
         return
     rows = list_store()
     if not rows:
-        return await event.reply(f"**📂 Store is empty.**\n`{STORE}`")
+        return await event.eor(f"**📂 Store is empty.**\n`{STORE}`")
     lines = [f"**📂 Stored files** ({len(rows)}) — {_human(store_bytes())} total\n"]
     lines += [f"• `{n}` — {_human(sz)} · {when}" for n, sz, when in rows]
-    lines.append("\nSend one with `.get <name>` · delete with `.delfile <name> force`")
-    await event.reply("\n".join(lines)[:3500])
+    lines.append("\nSend one with `.fetch <name>` · delete with `.delfile <name> force`")
+    await event.eor("\n".join(lines)[:3500])
 
 
 # NB: no `.del` here on purpose — admin.py owns that, and it deletes the
@@ -258,18 +258,18 @@ async def ls_cmd(event):
 async def _do_del(event, name, force):
     path = resolve(name)
     if not path:
-        return await event.reply(f"❌ No stored file called `{name}`.")
+        return await event.eor(f"❌ No stored file called `{name}`.")
     if not force:
         size = _human(os.path.getsize(path))
-        return await event.reply(
+        return await event.eor(
             f"`{name}` is {size}. Add `force` to delete it: "
             f"`.delfile {name} force`"
         )
     try:
         os.remove(path)
     except OSError as e:
-        return await event.reply(f"❌ `{e}`")
-    await event.reply(f"🗑 Deleted `{name}`.")
+        return await event.eor(f"❌ `{e}`")
+    await event.eor(f"🗑 Deleted `{name}`.")
 
 
 # ============================================================ ephemeral
@@ -277,10 +277,10 @@ async def _do_del(event, name, force):
 async def fileinfo_cmd(event):
     """Technical metadata for replied media. Reply to a file or photo."""
     if not event.reply_to:
-        return await event.reply("Reply to a message with media.")
+        return await event.eor("Reply to a message with media.")
     rep = await event.get_reply_message()
     if not rep.media:
-        return await event.reply("No media found.")
+        return await event.eor("No media found.")
 
     media = rep.media
     info = "**File Info**\n"
@@ -306,28 +306,28 @@ async def fileinfo_cmd(event):
         # the media over MTProto, so say it out loud rather than gate it.
         info += "\n\n⚠️ That file ID is permanent and re-downloadable — don't paste "
         info += "this in a chat with people you don't trust."
-    await event.reply(info)
+    await event.eor(info)
 
 
 @command("sticker")
 async def sticker_cmd(event):
     """Convert a replied image to a sticker and post it."""
     if not event.reply_to:
-        return await event.reply("Reply to an image.")
+        return await event.eor("Reply to an image.")
     rep = await event.get_reply_message()
     if not rep.photo and not rep.document:
-        return await event.reply("Reply to an image.")
+        return await event.eor("Reply to an image.")
 
     tmpdir = ephemeral()
     try:
         path = await rep.download_media(file=tmpdir)
         if not path:
-            return await event.reply("Could not download the image.")
+            return await event.eor("Could not download the image.")
         await event.client.send_file(
             event.chat_id, path, force_document=False, as_sticker=True
         )
     except Exception as e:
-        await event.reply(f"❌ `{type(e).__name__}: {e}`")
+        await event.eor(f"❌ `{type(e).__name__}: {e}`")
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
 
@@ -338,7 +338,7 @@ async def webshot_cmd(event):
     a = event.text.split(maxsplit=1)
     url = a[1].strip() if len(a) > 1 else ""
     if not url:
-        return await event.reply("Give a URL. Usage: `.webshot example.com`")
+        return await event.eor("Give a URL. Usage: `.webshot example.com`")
     if not url.startswith("http"):
         url = "https://" + url
     host = urllib.parse.urlparse(url).netloc or "example"
@@ -351,7 +351,7 @@ async def webshot_cmd(event):
             async with s.get(shot, timeout=30) as r:
                 data = await r.read()
         if len(data) < 1000:
-            return await event.reply("❌ thum.io returned nothing useful.")
+            return await event.eor("❌ thum.io returned nothing useful.")
         path = os.path.join(tmpdir, "screenshot.png")
         with open(path, "wb") as f:
             f.write(data)
@@ -359,7 +359,7 @@ async def webshot_cmd(event):
             event.chat_id, path, force_document=False, file_name=f"{host}.png"
         )
     except Exception as e:
-        await event.reply(f"❌ `{type(e).__name__}: {e}`")
+        await event.eor(f"❌ `{type(e).__name__}: {e}`")
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
 
@@ -372,9 +372,9 @@ async def json_cmd(event):
         data = rep.to_dict() if hasattr(rep, "to_dict") else {}
         blob = _json.dumps(data, indent=2, ensure_ascii=False, default=str)
     except Exception as e:
-        return await event.reply(f"❌ `{type(e).__name__}: {e}`")
+        return await event.eor(f"❌ `{type(e).__name__}: {e}`")
     if len(blob) > 1_000_000:
-        return await event.reply("❌ That's too much JSON to post.")
+        return await event.eor("❌ That's too much JSON to post.")
     tmpdir = ephemeral()
     try:
         path = os.path.join(tmpdir, "message.json")
@@ -384,7 +384,7 @@ async def json_cmd(event):
             event.chat_id, path, force_document=True, file_name="message.json"
         )
     except Exception as e:
-        await event.reply(f"❌ `{type(e).__name__}: {e}`")
+        await event.eor(f"❌ `{type(e).__name__}: {e}`")
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
 

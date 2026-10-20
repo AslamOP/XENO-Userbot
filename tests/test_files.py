@@ -63,6 +63,12 @@ class Ev:
         self.sent = a[0] if a else None
         return self
 
+    async def eor(self, *a, **k):
+        return await self.reply(*a, **k)
+
+    async def eod(self, *a, **k):
+        return await self.reply(*a, **k)
+
     async def get_reply_message(self):
         return self._rep
 
@@ -136,7 +142,7 @@ def wipe():
 # --- the module ------------------------------------------------------------
 @test
 def test_all_file_commands_in_one_module():
-    for n in ("save", "get", "ls", "delfile", "rm",
+    for n in ("save", "fetch", "ls", "delfile", "rm",
               "fileinfo", "sticker", "webshot", "json"):
         check(f".{n} in files.py", n in C, sorted(C))
     for n in ("download", "savefile", "files"):
@@ -167,8 +173,8 @@ def test_save_and_get_roundtrip():
     check("bytes intact",
           open(os.path.join(F.STORE, "doc.txt"), "rb").read() == payload)
 
-    ev = run("get", ".get doc.txt")
-    check("get sends it back", len(ev.client.snaps) == 1, ev.client.snaps)
+    ev = run("fetch", ".fetch doc.txt")
+    check("fetch sends it back", len(ev.client.snaps) == 1, ev.client.snaps)
     if ev.client.snaps:
         check("same name", ev.client.snaps[0][0] == "doc.txt", ev.client.snaps[0][0])
         check("same bytes", ev.client.snaps[0][1] == payload)
@@ -191,7 +197,7 @@ def test_save_dedupes_names():
     names = sorted(os.listdir(F.STORE))
     check("second save doesn't clobber", len(names) == 2, names)
     check("deduped name", any("(1)" in n for n in names), names)
-    run("get", ".get same (1).txt")
+    run("fetch", ".fetch same (1).txt")
     wipe()
 
 
@@ -214,8 +220,8 @@ def test_resolve_cannot_escape_the_store():
     check("subdir refused", F.resolve("sub/x.txt") is None)
     check("backslash refused", F.resolve("sub\\x.txt") is None)
     check("nonexistent returns None", F.resolve("nope.txt") is None)
-    ev = run("get", ".get ../etc/passwd")
-    check(".get refuses traversal", ev.sent and "❌" in str(ev.sent), ev.sent)
+    ev = run("fetch", ".fetch ../etc/passwd")
+    check(".fetch refuses traversal", ev.sent and "❌" in str(ev.sent), ev.sent)
     check("nothing sent", not ev.client.calls)
     ev = run("delfile", ".delfile ../etc/passwd force")
     check(".delfile refuses traversal", ev.sent and "❌" in str(ev.sent), ev.sent)
@@ -226,7 +232,7 @@ def test_resolve_cannot_escape_the_store():
 def test_get_missing_lists_alternatives():
     wipe()
     run("save", ".save here.txt", rep=MediaRep(b"x", "a.bin"))
-    ev = run("get", ".get missing.txt")
+    ev = run("fetch", ".fetch missing.txt")
     check("helpful error", ev.sent and "No stored file" in str(ev.sent), ev.sent)
     check("suggests what's available", ev.sent and "here.txt" in str(ev.sent))
     wipe()
@@ -250,7 +256,7 @@ def test_delfile_requires_force():
 @test
 def test_store_writes_are_owner_only():
     wipe()
-    for cmd, text in (("save", ".save x.txt"), ("get", ".get x.txt"),
+    for cmd, text in (("save", ".save x.txt"), ("fetch", ".fetch x.txt"),
                       ("ls", ".ls"), ("delfile", ".delfile x.txt force"),
                       ("rm", ".rm x.txt force")):
         rep = MediaRep(b"x", "a.bin") if cmd == "save" else None

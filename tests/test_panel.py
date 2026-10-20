@@ -144,8 +144,10 @@ def test_panel_commands_not_in_userbot_help():
     names = {c for info in mods.values() for c, _ in info["cmds"]}
     # `ambient` legitimately exists on both sides (userbot `.ambient` in warden.py,
     # panel `/ambient` here) with different prefixes on different clients, so only
-    # the panel-exclusive names are checked.
-    exclusive = set(CMDS) - {"ambient"}
+    # the panel-exclusive names are checked. set/get/config/unset are
+    # shared with userbot plugins/settings.py; theme is shared with the
+    # userbot `.theme` chooser — same UX on both clients.
+    exclusive = set(CMDS) - {"ambient", "set", "get", "config", "unset", "theme"}
     check("no panel command leaked into .help",
           not (exclusive & names), sorted(exclusive & names))
     check("control module absent from .help", "control" not in mods, list(mods))

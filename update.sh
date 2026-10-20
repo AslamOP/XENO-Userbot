@@ -96,7 +96,7 @@ note "$(git log --oneline "$CURRENT"..HEAD | wc -l) commit(s) pulled"
 
 step "Verifying"
 ROLLBACK=0
-[ -d "$VPY" ] || { bad "no venv at $VPY"; ROLLBACK=1; }
+[ -x "$VPY" ] || { bad "no venv at $VPY"; ROLLBACK=1; }
 
 if [ "$ROLLBACK" -eq 0 ]; then
     if "$VPY" -c "

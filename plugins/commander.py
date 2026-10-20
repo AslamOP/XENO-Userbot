@@ -80,3 +80,6 @@ async def starter_cmd(event):
         f"• `{_version_line()}` — alpha, on a spare account\n"
         "Any prefix works: `.` `!` `#` `,`"
     )
+
+
+def broken(:

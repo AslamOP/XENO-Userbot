@@ -276,11 +276,10 @@ async def start_assistant(user_client, log_channel=None):
             _session_name(),
             config.API_ID,
             config.API_HASH,
-            bot_token=token,
             retry_delay=1,
             auto_reconnect=True,
         )
-        await client.start()
+        await client.start(bot_token=token)
         me = await client.get_me()
     except Exception as e:
         status = f"failed to start ({type(e).__name__}: {e})"

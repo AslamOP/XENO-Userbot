@@ -185,7 +185,8 @@ async def _enable_inline(client, username):
 
 async def _decorate(user_client, username, log_channel=None):
     """Give the new bot a bio and description so it isn't a bare @handle."""
-    sir = f"@{user_client.me.username}" if user_client.me.username else user_client.me.first_name
+    me = await user_client.get_me()
+    sir = f"@{me.username}" if me.username else me.first_name
     for cmd, payload in (
         ("/setabouttext", f"Control panel for {sir}'s XENO."),
         ("/setdescription", "Remote control panel for the XENO userbot. Owner-only."),

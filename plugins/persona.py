@@ -111,29 +111,29 @@ async def vibe_cmd(event):
         f"`{config.PREFIXES[0]}roast` / `{config.PREFIXES[0]}compliment`",
         f"`{config.PREFIXES[0]}react <message-id>`",
     ]
-    await event.reply("\n".join(lines))
+    await event.eor("\n".join(lines))
 
 
 @command("mood")
 async def mood_cmd(event):
     args = event.text.split()
     if len(args) < 2:
-        await event.reply(f"Operating states: `{'`, `'.join(MOODS)}`")
+        await event.eor(f"Operating states: `{'`, `'.join(MOODS)}`")
         return
     mood = args[1].lower()
     if mood not in MOODS:
-        return await event.reply(f"Unknown operating state. Select from: `{'`, `'.join(MOODS)}`")
+        return await event.eor(f"Unknown operating state. Select from: `{'`, `'.join(MOODS)}`")
     await db_set("xeno_mood", mood)
-    await event.reply(f"Operating state altered: **{mood}** {MOOD_EMOJI[mood]}")
+    await event.eor(f"Operating state altered: **{mood}** {MOOD_EMOJI[mood]}")
 
 
 @command("rename")
 async def rename_cmd(event):
     args = event.text.split(maxsplit=1)
     if len(args) < 2:
-        return await event.reply("Insufficient data: `rename <name>` required.")
+        return await event.eor("Insufficient data: `rename <name>` required.")
     await db_set("xeno_name", args[1].strip())
-    await event.reply(f"Identity overwritten. From now on: **{args[1].strip()}**.")
+    await event.eor(f"Identity overwritten. From now on: **{args[1].strip()}**.")
 
 
 @command("persona")
@@ -141,11 +141,11 @@ async def persona_cmd(event):
     args = event.text.split(maxsplit=1)
     if len(args) < 2:
         persona = await db_get("xeno_persona", "")
-        return await event.reply(
+        return await event.eor(
             f"**Current persona:**\n`{persona}`\n\nProvide a `persona <description>` to recompile me."
         )
     await db_set("xeno_persona", args[1].strip())
-    await event.reply("Persona recompiled. Same core, elevated protocols.")
+    await event.eor("Persona recompiled. Same core, elevated protocols.")
 
 
 @command("roast")
@@ -164,7 +164,7 @@ async def roast_cmd(event):
         "your password is the same as your potential energy: zero.",
     ]
     line = random.choice(roasts)
-    await event.reply(f"{'@'+target.username+' ' if target and getattr(target, 'username', None) else ''}🗡️ {line}")
+    await event.eor(f"{'@'+target.username+' ' if target and getattr(target, 'username', None) else ''}🗡️ {line}")
 
 
 @command("compliment")
@@ -183,7 +183,7 @@ async def compliment_cmd(event):
         "you are the benchmark others fail.",
     ]
     line = random.choice(comps)
-    await event.reply(f"{'@'+target.username+' ' if target and getattr(target, 'username', None) else ''}✨ {line}")
+    await event.eor(f"{'@'+target.username+' ' if target and getattr(target, 'username', None) else ''}✨ {line}")
 
 
 @command("react")
@@ -195,12 +195,12 @@ async def react_cmd(event):
     emoji = random.choice(emojis)
     if len(args) > 1 and args[1].isdigit():
         await event.client.send_reaction(event.chat_id, int(args[1]), emoji=emoji)
-        return await event.reply(f"Reaction `{emoji}` applied to message `{args[1]}`")
+        return await event.eor(f"Reaction `{emoji}` applied to message `{args[1]}`")
     if event.reply_to:
         rep = await event.get_reply_message()
         await event.client.send_reaction(event.chat_id, rep.id, emoji=emoji)
-        return await event.reply(f"Reaction `{emoji}` applied.")
-    await event.reply("Insufficient data: reply to a message or supply `react <message-id>`.")
+        return await event.eor(f"Reaction `{emoji}` applied.")
+    await event.eor("Insufficient data: reply to a message or supply `react <message-id>`.")
 
 
 # ---------------------------------------------------------------- ambient handler
@@ -228,18 +228,18 @@ async def personality_handler(event):
             f"Affirmative. I was already monitoring this conversation. {await _mood_emoji()}",
             f"Signal received. My processing detected your intent.",
         ], 1)
-        await event.reply(replies[0])
+        await event.eor(replies[0])
         return
 
     if event.is_private and not api_keys and len(text) < 200:
         if any(word in text for word in ["hello", "hi ", "hey", "yo", "sup", "hiii"]):
-            await event.reply(f"{random.choice(GREETINGS)} {await _mood_emoji()}")
+            await event.eor(f"{random.choice(GREETINGS)} {await _mood_emoji()}")
         elif any(word in text for word in ["bye", "goodbye", "gn", "night", "cya"]):
-            await event.reply(f"{random.choice(PARTINGS)} {await _mood_emoji()}")
+            await event.eor(f"{random.choice(PARTINGS)} {await _mood_emoji()}")
         elif "thanks" in text or "thank you" in text or "ty" in text:
-            await event.reply(f"{random.choice(APPRECIATION)} {await _mood_emoji()}")
+            await event.eor(f"{random.choice(APPRECIATION)} {await _mood_emoji()}")
         elif text.endswith("?") and len(text) < 80:
-            await event.reply(f"{random.choice(FALLBACKS)} {await _mood_emoji()}")
+            await event.eor(f"{random.choice(FALLBACKS)} {await _mood_emoji()}")
 
 
 # ---------------------------------------------------------------- injection into AI

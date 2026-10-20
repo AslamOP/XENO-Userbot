@@ -58,7 +58,7 @@ async def welcome_handler(event):
             welcome_text = welcome_settings[chat_id].get(
                 "text", f"Welcome {name}!"
             ).replace("{name}", name).replace("{chat}", str(event.chat_id))
-            await event.reply(welcome_text)
+            await event.eor(welcome_text)
         except Exception:
             pass
 
@@ -97,7 +97,7 @@ async def antispam_handler(event):
     if len(message_counts[key]) > threshold:
         try:
             await event.client.edit_permissions(chat_id, user_id, send_messages=False)
-            await event.reply(f"**Auto-muted** user `{user_id}` for spamming.")
+            await event.eor(f"**Auto-muted** user `{user_id}` for spamming.")
         except Exception:
             pass
         finally:
@@ -114,7 +114,7 @@ async def welcome_cmd(event):
         current = welcome_settings.get(chat_id, {})
         status = "ON" if current.get("enabled") else "OFF"
         text = current.get("text", "Welcome {name}!")
-        await event.reply(
+        await event.eor(
             f"**Welcome messages:** `{status}`\nText: `{text}`\n\n"
             f"Use `{config.PREFIXES[0]}welcome on/off` or `{config.PREFIXES[0]}welcome <text>`"
         )
@@ -126,19 +126,19 @@ async def welcome_cmd(event):
             welcome_settings[chat_id] = {}
         welcome_settings[chat_id]["enabled"] = True
         save_welcome()
-        await event.reply(f"{sage.ack()} Welcome protocol engaged.")
+        await event.eor(f"{sage.ack()} Welcome protocol engaged.")
     elif arg == "off":
         if chat_id in welcome_settings:
             welcome_settings[chat_id]["enabled"] = False
         save_welcome()
-        await event.reply(f"{sage.ack()} Welcome protocol suspended.")
+        await event.eor(f"{sage.ack()} Welcome protocol suspended.")
     else:
         if chat_id not in welcome_settings:
             welcome_settings[chat_id] = {}
         welcome_settings[chat_id]["text"] = args[1]
         welcome_settings[chat_id]["enabled"] = True
         save_welcome()
-        await event.reply(f"**Welcome text set.**\nUse `{{name}}` for username, `{{chat}}` for chat ID.")
+        await event.eor(f"**Welcome text set.**\nUse `{{name}}` for username, `{{chat}}` for chat ID.")
 
 
 @command("stats")
@@ -159,7 +159,7 @@ async def stats_cmd(event):
     )
     if hasattr(chat, "about") and chat.about:
         text += f"\nAbout: `{chat.about}`"
-    await event.reply(text)
+    await event.eor(text)
 
 
 @command("lock")
@@ -167,7 +167,7 @@ async def lock_cmd(event):
     """Lock a chat feature. Usage: `lock msg|media|sticker|gif|game|inline|poll|info`."""
     args = event.text.split()
     if len(args) < 2:
-        return await event.reply(
+        return await event.eor(
             "Usage: `lock <feature>`\nFeatures: `msg, media, sticker, gif, game, inline, poll, info`"
         )
     feature = args[1].lower()
@@ -182,7 +182,7 @@ async def lock_cmd(event):
         "info": ("change_info", False),
     }
     if feature not in perm_map:
-        return await event.reply(f"Unknown feature: `{feature}`")
+        return await event.eor(f"Unknown feature: `{feature}`")
 
     perm_name, perm_val = perm_map[feature]
     try:
@@ -190,9 +190,9 @@ async def lock_cmd(event):
             event.chat_id,
             **{perm_name: perm_val},
         )
-        await event.reply(f"{sage.ack()} **Locked** — `{feature}` state sealed.")
+        await event.eor(f"{sage.ack()} **Locked** — `{feature}` state sealed.")
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 @command("unlock")
@@ -200,7 +200,7 @@ async def unlock_cmd(event):
     """Unlock a locked chat feature. Usage: `unlock <feature>`."""
     args = event.text.split()
     if len(args) < 2:
-        return await event.reply("Usage: `unlock <feature>`")
+        return await event.eor("Usage: `unlock <feature>`")
     feature = args[1].lower()
     perm_map = {
         "msg": ("send_messages", True),
@@ -213,7 +213,7 @@ async def unlock_cmd(event):
         "info": ("change_info", True),
     }
     if feature not in perm_map:
-        return await event.reply(f"Unknown feature: `{feature}`")
+        return await event.eor(f"Unknown feature: `{feature}`")
 
     perm_name, perm_val = perm_map[feature]
     try:
@@ -221,6 +221,6 @@ async def unlock_cmd(event):
             event.chat_id,
             **{perm_name: perm_val},
         )
-        await event.reply(f"{sage.ack()} **Unlocked** — `{feature}` state opened.")
+        await event.eor(f"{sage.ack()} **Unlocked** — `{feature}` state opened.")
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")

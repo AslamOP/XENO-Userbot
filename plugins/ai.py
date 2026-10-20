@@ -112,10 +112,10 @@ async def ai_cmd(event):
     """Ask the AI assistant anything. Usage: `.ai <question>`."""
     args = event.text.split(maxsplit=1)
     if len(args) < 2:
-        return await event.reply(f"Usage: `{config.PREFIXES[0]}ai <your message>`")
+        return await event.eor(f"Usage: `{config.PREFIXES[0]}ai <your message>`")
 
     prompt = args[1]
-    status = await event.reply("Thinking...")
+    status = await event.eor("Thinking...")
 
     key = _hist_key(event)
     history = conversations.get(key, [])
@@ -134,12 +134,12 @@ async def ai_cmd(event):
 async def auto_cmd(event):
     """Toggle AI auto-reply in DMs (`auto on`/`auto off`)."""
     if not await is_owner(event):
-        return await event.reply("🔒 Owner only.")
+        return await event.eor("🔒 Owner only.")
     args = event.text.split()
     if len(args) < 2:
         current = "ON" if config.AI_AUTO_REPLY else "OFF"
         allow = config.get("AI_ALLOWED_IDS", "") or "anyone"
-        await event.reply(
+        await event.eor(
             f"Auto-reply: `{current}`\nAllowed IDs: `{allow}`\nUse `auto on/off`\n"
             f"Throttle: 1 reply per {MIN_REPLY_GAP}s, {AUTO_REPLY_BUDGET}/hour."
         )
@@ -148,17 +148,17 @@ async def auto_cmd(event):
     state = args[1].lower()
     if state == "on":
         config.AI_AUTO_REPLY = True
-        await event.reply("**Auto-reply enabled.**")
+        await event.eor("**Auto-reply enabled.**")
     elif state == "off":
         config.AI_AUTO_REPLY = False
-        await event.reply("**Auto-reply disabled.**")
+        await event.eor("**Auto-reply disabled.**")
 
 
 @command("clearhistory")
 async def clearhistory_cmd(event):
     """Clear YOUR AI conversation history in this chat. Usage: `.clearhistory`"""
     conversations.pop(_hist_key(event), None)
-    await event.reply("**Conversation history cleared.**")
+    await event.eor("**Conversation history cleared.**")
 
 
 # Auto-reply listener
@@ -193,4 +193,4 @@ async def auto_reply_handler(event):
     history.append({"role": "assistant", "content": response})
     conversations[key] = history[-MAX_HISTORY:]
 
-    await event.reply(response)
+    await event.eor(response)

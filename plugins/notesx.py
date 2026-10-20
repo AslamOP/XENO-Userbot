@@ -17,13 +17,13 @@ async def savenote_cmd(event):
     """Save a note. Usage: `.noteadd <key> <text>` """
     a = event.text.split(maxsplit=2)
     if len(a) < 3:
-        return await event.reply("Usage: `.noteadd <key> <text>`")
+        return await event.eor("Usage: `.noteadd <key> <text>`")
     key = a[1].strip().lower()
     text = a[2].strip()
     notes = await db_get(_key(event), {})
     notes[key] = text
     await db_set(_key(event), notes)
-    await event.reply(f"📝 Note `{key}` saved.")
+    await event.eor(f"📝 Note `{key}` saved.")
 
 
 @command("getnote")
@@ -33,8 +33,8 @@ async def getnote_cmd(event):
     key = a[1].strip().lower() if len(a) > 1 else ""
     notes = await db_get(_key(event), {})
     if key not in notes:
-        return await event.reply(f"No note `{key}`. Use `.noteadd {key} <text>`")
-    await event.reply(f"**{key}:**\n{notes[key]}")
+        return await event.eor(f"No note `{key}`. Use `.noteadd {key} <text>`")
+    await event.eor(f"**{key}:**\n{notes[key]}")
 
 
 @command("notedel")
@@ -46,9 +46,9 @@ async def delnote_cmd(event):
     if key in notes:
         del notes[key]
         await db_set(_key(event), notes)
-        await event.reply(f"🗑 Note `{key}` deleted.")
+        await event.eor(f"🗑 Note `{key}` deleted.")
     else:
-        await event.reply(f"No note `{key}`.")
+        await event.eor(f"No note `{key}`.")
 
 
 @command("notelist")
@@ -56,31 +56,31 @@ async def notes_cmd(event):
     """List all saved notes."""
     notes = await db_get(_key(event), {})
     if not notes:
-        return await event.reply("No notes saved yet.")
-    await event.reply("**📕 Your notes:**\n" + "\n".join(f"• `{k}`" for k in notes))
+        return await event.eor("No notes saved yet.")
+    await event.eor("**📕 Your notes:**\n" + "\n".join(f"• `{k}`" for k in notes))
 
 
 @command("savemsg")
 async def savemsg_cmd(event):
     """Save a replied message as a note with auto-key. Usage: `.savemsg`"""
     if not event.reply_to:
-        return await event.reply("Reply to a message to save it as a note.")
+        return await event.eor("Reply to a message to save it as a note.")
     r = await event.get_reply_message()
     txt = getattr(r, "raw_text", "")
     if not txt:
-        return await event.reply("That message has no text.")
+        return await event.eor("That message has no text.")
     key = f"msg{int(time.time())}"
     notes = await db_get(_key(event), {})
     notes[key] = txt
     await db_set(_key(event), notes)
-    await event.reply(f"📝 Saved as note `{key}`. Get it with `.getnote {key}`")
+    await event.eor(f"📝 Saved as note `{key}`. Get it with `.getnote {key}`")
 
 
 @command("stickers")
 async def stickers_cmd(event):
     """Owner: list installed sticker packs."""
     if not await is_owner(event):
-        return await event.reply("Owner only.")
+        return await event.eor("Owner only.")
     try:
         from telethon.tl.functions.messages import GetAllStickersRequest
         r = await event.client(GetAllStickersRequest(hash=0))
@@ -88,6 +88,6 @@ async def stickers_cmd(event):
         lines = [f"**🧩 Sticker packs ({len(packs)}):**"]
         for p in packs[:15]:
             lines.append(f"• `{getattr(p, 'short_name', '?')}`")
-        await event.reply("\n".join(lines))
+        await event.eor("\n".join(lines))
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")

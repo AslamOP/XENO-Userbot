@@ -10,7 +10,7 @@ from core.command import command
 
 async def _deny(event):
     if not await is_owner(event):
-        await event.reply("🔒 Owner only — this reports host internals.")
+        await event.eor("🔒 Owner only — this reports host internals.")
         return True
     return False
 
@@ -26,12 +26,12 @@ async def uptime_cmd(event):
         days, rem = divmod(int(up), 86400)
         hrs, rem = divmod(rem, 3600)
         mins, secs = divmod(rem, 60)
-        await event.reply(
+        await event.eor(
             f"**💻 Uptime:** `{days}d {hrs}h {mins}m {secs}s`\n"
             f"🈶 Since: `{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time() - up))}`"
         )
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 @command("sysinfo")
@@ -39,7 +39,7 @@ async def sysinfo_cmd(event):
     """System info: hostname, arch, OS, python."""
     if await _deny(event):
         return
-    await event.reply(
+    await event.eor(
         f"**🖥 System info:**\n"
         f"Host: `{platform.node()}`\n"
         f"OS: `{platform.platform()}`\n"
@@ -60,7 +60,7 @@ async def mem_cmd(event):
         data = {k: int(v.split()[0]) for k, v in (l.split(":", 1) for l in raw)}
         total = data["MemTotal"] // 1024
         avail = data.get("MemAvailable", data["MemFree"]) // 1024
-        await event.reply(
+        await event.eor(
             f"**🧠 Memory:**\n"
             f"Total: `{total} MB`\n"
             f"Used: `{total - avail} MB`\n"
@@ -68,7 +68,7 @@ async def mem_cmd(event):
             f"Swap: `{data.get('SwapTotal', 0) // 1024} MB`"
         )
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 @command("cpu")
@@ -79,13 +79,13 @@ async def cpu_cmd(event):
     try:
         with open("/proc/loadavg") as f:
             p = f.read().split()
-        await event.reply(
+        await event.eor(
             f"**🎛 CPU load:**\n"
             f"1m: `{p[0]}`\n5m: `{p[1]}`\n15m: `{p[2]}`\n"
             f"Runnable: `{p[3]}`\nTotal procs: `{p[4]}`"
         )
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 @command("diskspace")
@@ -96,8 +96,8 @@ async def diskspace_cmd(event):
     try:
         u = shutil.disk_usage("/")
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
-    await event.reply(
+        return await event.eor(f"Error: `{e}`")
+    await event.eor(
         f"**💾 Disk (/):**\n"
         f"Total: `{u.total / 2**30:.1f} GB`\nUsed: `{u.used / 2**30:.1f} GB`\n"
         f"Free: `{u.free / 2**30:.1f} GB`\nUsage: `{u.used / u.total * 100:.1f}%`"
@@ -111,7 +111,7 @@ async def whoami_cmd(event):
     # and premium status into whatever chat it was typed in.
     u = await event.get_sender()
     me = await event.client.get_me()
-    await event.reply(
+    await event.eor(
         f"**👤 You:**\n"
         f"ID: `{u.id}`\nName: `{u.first_name}`\n"
         f"Username: `@{u.username if getattr(u, 'username', None) else '—'}`\n"

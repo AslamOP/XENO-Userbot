@@ -29,7 +29,7 @@ async def about_cmd(event):
 
     mods = _scan_commands()
     total = sum(len(i["cmds"]) for i in mods.values())
-    await event.reply(
+    await event.eor(
         "**🤖 XENO** — a modular Telegram userbot (Python / Telethon).\n"
         f"Version: `{_version_line()}`\n"
         f"`{len(mods)}` modules • `{total}` commands\n"
@@ -42,7 +42,7 @@ async def about_cmd(event):
 @command("version")
 async def version_cmd(event):
     """XENO version and maturity channel."""
-    await event.reply(f"**🧩 XENO:** `{_version_line()}`\n\n{STAGE}")
+    await event.eor(f"**🧩 XENO:** `{_version_line()}`\n\n{STAGE}")
 
 
 @command("maturity")
@@ -52,7 +52,7 @@ async def maturity_cmd(event):
     Named `.maturity` rather than `.status` so it doesn't shadow the
     assistant panel's `/status`.
     """
-    await event.reply(
+    await event.eor(
         f"**🧪 XENO status — `{_version_line()}`**\n\n"
         "**Tested:** offline suite (283 checks) on the deployment target.\n"
         "**Not tested:** live Telegram traffic, long-running sessions, "
@@ -70,7 +70,7 @@ async def maturity_cmd(event):
 @command("starter")
 async def starter_cmd(event):
     """First-run primer."""
-    await event.reply(
+    await event.eor(
         "👋 **XENO online.**\n"
         "• `.help` — every module\n"
         "• `.help <module>` or `.help <command>` — detail\n"

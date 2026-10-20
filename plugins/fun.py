@@ -73,8 +73,8 @@ async def ball_cmd(event):
     a = event.text.split(maxsplit=1)
     q = a[1].strip() if len(a) > 1 else ""
     if not q:
-        return await event.reply("Ask me something: `.8ball <question>`")
-    return await event.reply(f"🎱 **{q}**\n→ {random.choice(answers)}")
+        return await event.eor("Ask me something: `.8ball <question>`")
+    return await event.eor(f"🎱 **{q}**\n→ {random.choice(answers)}")
 
 
 @command("joke")
@@ -82,10 +82,10 @@ async def joke_cmd(event):
     """Get a random joke."""
     try:
         data = await get_json("https://official-joke-api.appspot.com/random_joke")
-        return await event.reply(f"**{data['setup']}**\n\n{data['punchline']}")
+        return await event.eor(f"**{data['setup']}**\n\n{data['punchline']}")
     except Exception:
         s, p = random.choice(_JOKES)
-        return await event.reply(f"**{s}**\n\n{p}")
+        return await event.eor(f"**{s}**\n\n{p}")
 
 
 @command("dadjoke")
@@ -94,9 +94,9 @@ async def dadjoke_cmd(event):
     try:
         txt = await get_text(
             "https://icanhazdadjoke.com/", headers={"Accept": "text/plain"})
-        return await event.reply(txt.strip())
+        return await event.eor(txt.strip())
     except Exception as e:
-        return await event.reply(f"**{e}** — but here: `{random.choice(_JOKES)[0]}`")
+        return await event.eor(f"**{e}** — but here: `{random.choice(_JOKES)[0]}`")
 
 
 @command("chuck")
@@ -104,9 +104,9 @@ async def chuck_cmd(event):
     """Get a Chuck Norris joke."""
     try:
         data = await get_json("https://api.chucknorris.io/jokes/random")
-        return await event.reply(data.get("value", ""))
+        return await event.eor(data.get("value", ""))
     except Exception as e:
-        return await event.reply(f"Chuck is busy: `{e}`")
+        return await event.eor(f"Chuck is busy: `{e}`")
 
 
 @command("advice")
@@ -115,9 +115,9 @@ async def advice_cmd(event):
     try:
         data = await get_json("https://api.adviceslip.com/advice")
         slip = data.get("slip", {})
-        return await event.reply(f"💡 **{slip.get('advice', '')}**")
+        return await event.eor(f"💡 **{slip.get('advice', '')}**")
     except Exception as e:
-        return await event.reply(f"`{e}`")
+        return await event.eor(f"`{e}`")
 
 
 @command("fact")
@@ -125,7 +125,7 @@ async def fact_cmd(event):
     """Get a random (useless) fact."""
     try:
         data = await get_json("https://uselessfacts.jsph.pl/api/v2/facts/random")
-        return await event.reply(f"ℹ️ {data.get('text', '')}")
+        return await event.eor(f"ℹ️ {data.get('text', '')}")
     except Exception as e:
         hist = [
             "Honey never spoils — archaeologists have eaten 3000-year-old honey.",
@@ -137,19 +137,19 @@ async def fact_cmd(event):
             "Lightning strikes the Empire State Building ~25 times a year.",
             "Mercury and Venus are the only planets without moons.",
         ]
-        return await event.reply(f"ℹ️ {random.choice(hist)}  (api off: `{e}`)")
+        return await event.eor(f"ℹ️ {random.choice(hist)}  (api off: `{e}`)")
 
 
 @command("truth")
 async def truth_cmd(event):
     """Get a truth challenge."""
-    return await event.reply(f"🗣 **TRUTH:** {random.choice(_TRUTHS)}")
+    return await event.eor(f"🗣 **TRUTH:** {random.choice(_TRUTHS)}")
 
 
 @command("dare")
 async def dare_cmd(event):
     """Get a dare challenge."""
-    return await event.reply(f"🔥 **DARE:** {random.choice(_DARES)}")
+    return await event.eor(f"🔥 **DARE:** {random.choice(_DARES)}")
 
 
 @command("wyr")
@@ -167,7 +167,7 @@ async def wyr_cmd(event):
         ("Be able to talk to animals or speak every human language?", ""),
         ("Get $10k now or $100k in 10 years?", ""),
     ]
-    return await event.reply(f"⚖️ **Would you rather…**\n{random.choice(qs)[0]}")
+    return await event.eor(f"⚖️ **Would you rather…**\n{random.choice(qs)[0]}")
 
 
 @command("topic")
@@ -185,7 +185,7 @@ async def topic_cmd(event):
         "What's a small habit that changed your life?",
         "If you could have dinner with any 3 people, living or dead, who?",
     ]
-    return await event.reply(f"💬 **Talk:** {random.choice(ideas)}")
+    return await event.eor(f"💬 **Talk:** {random.choice(ideas)}")
 
 
 @command("insult")
@@ -196,16 +196,16 @@ async def insult_cmd(event):
             "https://insult.mattbas.org/api/insult?lang=en",
             headers={"User-Agent": "xeno/1.0"})
         if txt and txt.strip():
-            return await event.reply(txt.strip())
+            return await event.eor(txt.strip())
         raise ValueError("empty")
     except Exception:
-        return await event.reply(f"😈 {random.choice(_ROASTS)}")
+        return await event.eor(f"😈 {random.choice(_ROASTS)}")
 
 
 @command("truthordare")
 async def tod_cmd(event):
     """Random truth-or-dare."""
-    return await event.reply(f"{random.choice(_TRUTHS if random.random() < 0.5 else _DARES)}")
+    return await event.eor(f"{random.choice(_TRUTHS if random.random() < 0.5 else _DARES)}")
 
 
 @command("horoscope")
@@ -216,12 +216,12 @@ async def horoscope_cmd(event):
     a = event.text.split(maxsplit=1)
     s = a[1].strip().title() if len(a) > 1 else random.choice(signs)
     if s not in signs:
-        return await event.reply(f"Pick a real sign: {', '.join(signs)}")
+        return await event.eor(f"Pick a real sign: {', '.join(signs)}")
     try:
         data = await get_json(f"https://horoscope-app-api.vercel.app/api/v1/get-horoscope/daily?sign={s.lower()}&day=today")
         d = data.get("data", {})
         moods = d.get("mood", "curious")
-        return await event.reply(
+        return await event.eor(
             f"**♈ {s} — {d.get('date', '')}**\n\n"
             f"{d.get('horoscope_data', '')}\n\n_Mood: {moods}_")
     except Exception:
@@ -235,7 +235,7 @@ async def horoscope_cmd(event):
             "Money flows in, patience pays out.",
             "Something ends — and that's the setup for something better.",
         ]
-        return await event.reply(f"{s}: {random.choice(pred)}")
+        return await event.eor(f"{s}: {random.choice(pred)}")
 
 
 @command("handshake")
@@ -249,13 +249,13 @@ async def handshake_cmd(event):
         "🤝 Cold hands, warm heart?",
         "🤝 Hand me a snack next time. Deal?",
     ]
-    return await event.reply(random.choice(funs))
+    return await event.eor(random.choice(funs))
 
 
 @command("flip")
 async def flip_cmd(event):
     """Flip a coin (heads or tails)."""
-    return await event.reply(random.choice(["Heads!", "Tails!"]))
+    return await event.eor(random.choice(["Heads!", "Tails!"]))
 
 
 @command("mpc")
@@ -271,7 +271,7 @@ async def mpc_cmd(event):
         "You will find a sock that changed your life. Then lose it.",
         "The moon is watching. No, seriously. It called your name.",
     ]
-    return await event.reply(random.choice(lines))
+    return await event.eor(random.choice(lines))
 
 
 @command("nameme")
@@ -284,5 +284,5 @@ async def nameme_cmd(event):
               "the Crypto Queen", "The Professor", "the Last Human", "the Tidebreaker"]
     suffix = random.choice(titles)
     if name:
-        return await event.reply(f"🏷 From now on you are **{name} {suffix}**.")
-    return await event.reply(f"🏷 Your title shall be **{random.choice(titles)}**.")
+        return await event.eor(f"🏷 From now on you are **{name} {suffix}**.")
+    return await event.eor(f"🏷 Your title shall be **{random.choice(titles)}**.")

@@ -32,25 +32,25 @@ if HAVE_PIL:
     async def _run_effect(event, label, fn, fmt="JPEG"):
         """Download the replied media to a private temp dir, apply fn, send, clean up."""
         if not event.reply_to:
-            return await event.reply("Reply to an image.")
+            return await event.eor("Reply to an image.")
         tmpdir = tempfile.mkdtemp(prefix="xeno_fx_")
         try:
             r = await event.get_reply_message()
             path = await r.download_media(file=tmpdir)
             if not path:
-                return await event.reply("Media not downloaded.")
+                return await event.eor("Media not downloaded.")
             size = os.path.getsize(path)
             if size > MAX_DOWNLOAD_BYTES:
-                return await event.reply(f"Image too large ({size // 1048576}MB). Max 20MB.")
+                return await event.eor(f"Image too large ({size // 1048576}MB). Max 20MB.")
             img = Image.open(path)
             img.load()
             out = fn(img)
             buf = io.BytesIO()
             out.save(buf, format=fmt)
             buf.seek(0)
-            await event.reply(f"**{label}:**", file=buf)
+            await event.eor(f"**{label}:**", file=buf)
         except Exception as e:
-            await event.reply(f"Error: `{e}`")
+            await event.eor(f"Error: `{e}`")
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
@@ -62,7 +62,7 @@ if HAVE_PIL:
         async def caption_cmd(event):
             """Add a caption line to a replied image. Usage: `.caption <text>`"""
             if not event.reply_to:
-                return await event.reply("Reply to an image.")
+                return await event.eor("Reply to an image.")
             txt = event.text.split(maxsplit=1)
             text = txt[1].strip() if len(txt) > 1 else "XENO"
 
@@ -173,20 +173,20 @@ if HAVE_PIL:
 async def color_cmd(event):
     """Generate a solid color image. Usage: `.color <hex>` e.g. `.color ff0000`"""
     if not HAVE_PIL:
-        return await event.reply("Pillow isn't installed, so image tools are off.")
+        return await event.eor("Pillow isn't installed, so image tools are off.")
     a = event.text.split(maxsplit=1)
     hx = a[1].strip().lstrip("#") if len(a) > 1 else "5a9cff"
     if len(hx) != 6:
-        return await event.reply("Give a 6-digit hex: `.color ff0000`")
+        return await event.eor("Give a 6-digit hex: `.color ff0000`")
     try:
         r, g, b = int(hx[0:2], 16), int(hx[2:4], 16), int(hx[4:6], 16)
     except ValueError:
-        return await event.reply("Invalid hex.")
+        return await event.eor("Invalid hex.")
     img = Image.new("RGB", (512, 512), (r, g, b))
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     buf.seek(0)
-    await event.reply(f"**🎨 #{hx.upper()}**", file=buf)
+    await event.eor(f"**🎨 #{hx.upper()}**", file=buf)
 
 
 @command("img")
@@ -195,19 +195,19 @@ async def img_cmd(event):
     a = event.text.split(maxsplit=1)
     q = a[1].strip() if len(a) > 1 else ""
     if not q:
-        return await event.reply("Give a query. Usage: `.img <query>`")
+        return await event.eor("Give a query. Usage: `.img <query>`")
     url = f"https://www.bing.com/images/search?q={urllib.parse.quote(q)}&format=rss"
     try:
         txt = await get_text(url)
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
     # Bing's RSS <link> is a result page, not the image file. Prefer the
     # media:content url when present; otherwise just list the pages.
     direct = re.findall(r'<media:content[^>]+url="([^"]+)"', txt)[:3]
     pages = [u.replace("&amp;", "&") for u in re.findall(r"<link>(.*?)</link>", txt)[1:4]]
     if direct:
-        return await event.reply(f"**🖼 {q}:**", file=direct[0])
+        return await event.eor(f"**🖼 {q}:**", file=direct[0])
     if pages:
         body = "\n".join(f"• {p}" for p in pages)
-        return await event.reply(f"**🖼 {q}:**\n{body}")
-    return await event.reply("No images found.")
+        return await event.eor(f"**🖼 {q}:**\n{body}")
+    return await event.eor("No images found.")

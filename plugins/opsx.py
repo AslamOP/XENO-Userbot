@@ -13,7 +13,7 @@ from core.command import command
 async def _deny(event, sudo_ok=False):
     allowed = await is_owner(event) or (sudo_ok and await is_sudo(event))
     if not allowed:
-        await event.reply("🔒 Owner only." if not sudo_ok else "🔒 Owner or sudo only.")
+        await event.eor("🔒 Owner only." if not sudo_ok else "🔒 Owner or sudo only.")
         return True
     return False
 
@@ -28,9 +28,9 @@ async def evalx_cmd(event):
         out = eval(code, {"event": event, "bot": event.client})  # noqa: S307
         if asyncio.iscoroutine(out):
             out = await out
-        await event.reply(f"**Eval:**\n`{out}`")
+        await event.eor(f"**Eval:**\n`{out}`")
     except Exception as e:
-        await event.reply(f"**Error:** `{e}`")
+        await event.eor(f"**Error:** `{e}`")
 
 
 @command("execx")
@@ -48,9 +48,9 @@ async def execx_cmd(event):
         with contextlib.redirect_stdout(buf):
             exec(code, {"event": event, "bot": event.client})  # noqa: S102
         out = buf.getvalue()
-        await event.reply(f"**Exec:**\n`{out[:4000]}`" if out else "**Exec:** (no output)")
+        await event.eor(f"**Exec:**\n`{out[:4000]}`" if out else "**Exec:** (no output)")
     except Exception as e:
-        await event.reply(f"**Error:** `{e}`")
+        await event.eor(f"**Error:** `{e}`")
 
 
 @command("logsx")
@@ -81,7 +81,7 @@ async def logsx_cmd(event):
                 "(no journal output and no userbot.log — running under Docker? "
                 "use `docker compose logs --tail 30`)"
             )
-    await event.reply(f"**📜 Logs (last 30):**\n`{out[-1500:]}`")
+    await event.eor(f"**📜 Logs (last 30):**\n`{out[-1500:]}`")
 
 
 @command("srestart")
@@ -98,15 +98,15 @@ async def srestart_cmd(event):
             capture_output=True, text=True, timeout=20,
         )
         if r.returncode == 0:
-            await event.reply("♻️ Restart requested (this reply may not be delivered).")
+            await event.eor("♻️ Restart requested (this reply may not be delivered).")
         else:
-            await event.reply(
+            await event.eor(
                 "⚠️ `systemctl` failed:\n`"
                 + (r.stderr or r.stdout).strip()[-500:]
                 + "`\nIf you're on Docker, use `docker compose restart` instead."
             )
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 @command("broadcast")
@@ -117,7 +117,7 @@ async def broadcast_cmd(event):
     txt = event.text.split(maxsplit=1)
     msg = txt[1].strip() if len(txt) > 1 else ""
     if not msg:
-        return await event.reply("Give a message: `.broadcast <text>`")
+        return await event.eor("Give a message: `.broadcast <text>`")
     try:
         from telethon.tl.functions.messages import GetDialogsRequest
         from telethon.tl.types import InputPeerEmpty
@@ -142,12 +142,12 @@ async def broadcast_cmd(event):
                 await asyncio.sleep(0.5)  # stay under flood limits
             except Exception:
                 failed += 1
-        await event.reply(
+        await event.eor(
             f"📣 Broadcast: `{sent}` groups sent, `{failed}` failed, "
             f"`{skipped}` non-groups skipped."
         )
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 @command("unbanall")
@@ -156,7 +156,7 @@ async def unbanall_cmd(event):
     if await _deny(event):
         return
     if not event.is_group:
-        return await event.reply("Groups only.")
+        return await event.eor("Groups only.")
     try:
         from telethon.tl.functions.channels import EditBannedRequest, GetParticipantsRequest
         from telethon.tl.types import ChannelParticipantsKicked, ChatBannedRights
@@ -182,9 +182,9 @@ async def unbanall_cmd(event):
                 cnt += 1
             except Exception:
                 continue
-        await event.reply(f"✅ Unbanned `{cnt}` users.")
+        await event.eor(f"✅ Unbanned `{cnt}` users.")
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 @command("spamx")
@@ -199,7 +199,7 @@ async def spamx_cmd(event):
         n = min(int(parts[1]), 10)
         msg = parts[2] if len(parts) > 2 else "spam"
     except (IndexError, ValueError):
-        return await event.reply("Usage: `.spamx <n> <text>` (max 10)")
+        return await event.eor("Usage: `.spamx <n> <text>` (max 10)")
     sent = 0
     for _ in range(n):
         try:
@@ -207,9 +207,9 @@ async def spamx_cmd(event):
             sent += 1
             await time.sleep(1.0)
         except FloodWaitError as e:
-            await event.reply(f"🛑 Flood wait: `{e.seconds}s`. Stopped after {sent}.")
+            await event.eor(f"🛑 Flood wait: `{e.seconds}s`. Stopped after {sent}.")
             return
-    await event.reply(f"✅ Sent `{sent}`.")
+    await event.eor(f"✅ Sent `{sent}`.")
 
 
 @command("digest")
@@ -233,6 +233,6 @@ async def digest_cmd(event):
             if getattr(dl, "unread_count", 0) > 0 and n < 15:
                 lines.append(f"• `{dl.id}` — {dl.unread_count} unread")
                 n += 1
-        await event.reply("\n".join(lines) if n else "All caught up ✅")
+        await event.eor("\n".join(lines) if n else "All caught up ✅")
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")

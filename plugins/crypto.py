@@ -17,7 +17,7 @@ async def _price(event, slug, sym):
     try:
         d = await get_json(f"https://api.coingecko.com/api/v3/coins/{slug}")
         if not d or "market_data" not in d:
-            return await event.reply(f"`{sym}` not found.")
+            return await event.eor(f"`{sym}` not found.")
         p = d["market_data"]["current_price"]["usd"]
         ch = d["market_data"].get("price_change_percentage_24h", 0)
         cap = d["market_data"].get("market_cap", {}).get("usd")
@@ -31,9 +31,9 @@ async def _price(event, slug, sym):
             f"🏦 Market cap: `${cap:,.0f}`",
             f"#️⃣ Rank: `#{rank}`",
         ]
-        await event.reply("\n".join(lines))
+        await event.eor("\n".join(lines))
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 for _sym, _slug in SYMS.items():
@@ -64,9 +64,9 @@ async def topcoins_cmd(event):
         for i, c in enumerate(d, 1):
             lines.append(f"{i}. **{c['symbol'].upper()}** `${c['current_price']:,.2f}` "
                          f"(24h `{c.get('price_change_percentage_24h', 0):.1f}%`)")
-        await event.reply("\n".join(lines))
+        await event.eor("\n".join(lines))
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 @command("feargreed")
@@ -78,9 +78,9 @@ async def feargreed_cmd(event):
         val = int(data["value"])
         label = data["value_classification"]
         bar = "🟢" * (val // 10) + "🔴" * (10 - val // 10)
-        await event.reply(f"**😨 Fear & Greed Index:**\n`{val}/100` — *{label}*\n{bar}")
+        await event.eor(f"**😨 Fear & Greed Index:**\n`{val}/100` — *{label}*\n{bar}")
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 @command("ethgas")
@@ -90,7 +90,7 @@ async def ethgas_cmd(event):
 
     key = config.get("ETHSCAN_API_KEY", "")
     if not key:
-        return await event.reply(
+        return await event.eor(
             "⚠️ `ethgas` needs an Etherscan key: set `ETHSCAN_API_KEY=` in .env "
             "(free tier at etherscan.io)."
         )
@@ -107,8 +107,8 @@ async def ethgas_cmd(event):
         # V2 returns result as a dict on success and as a string on error.
         r = d.get("result")
         if not isinstance(r, dict):
-            return await event.reply(f"Etherscan: `{d.get('message', r)}`")
-        await event.reply(
+            return await event.eor(f"Etherscan: `{d.get('message', r)}`")
+        await event.eor(
             "**⛽ Ethereum Gas:**\n"
             f"Safe: `{r.get('SafeGasPrice')} Gwei`\n"
             f"Proposed: `{r.get('ProposeGasPrice')} Gwei`\n"
@@ -116,4 +116,4 @@ async def ethgas_cmd(event):
             f"Base fee: `{r.get('suggestBaseFee')} Gwei`"
         )
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")

@@ -4,6 +4,7 @@ from telethon import events
 
 import config
 from core import assistant as assistant_mod
+from core import wrappers  # noqa: F401  — monkeypatches Message.eor / Message.eod
 from core.bot import bot
 
 

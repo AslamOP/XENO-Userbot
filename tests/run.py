@@ -17,7 +17,8 @@ os.chdir(os.path.dirname(HERE))
 from fakes import _RESULTS, check  # noqa: E402
 
 MODULES = ["test_botfather", "test_panel", "test_custom_plugins",
-           "test_temp_and_files", "test_files", "test_plugins"]
+           "test_temp_and_files", "test_files", "test_plugins",
+           "test_theme_and_eor"]
 
 
 def main():

@@ -18,7 +18,7 @@ async def typing_cmd(event):
     for _ in range(n):
         await event.client(SetTypingRequest(event.chat_id, SendMessageTypingAction()))
         await asyncio.sleep(1)
-    await event.reply("✍️ Done typing (fake).")
+    await event.eor("✍️ Done typing (fake).")
 
 
 @command("readonce")
@@ -27,16 +27,16 @@ async def readonce_cmd(event):
     try:
         from telethon.tl.functions.messages import ReadHistoryRequest
         await event.client(ReadHistoryRequest(event.chat_id, 0))
-        await event.reply("✅ Read.")
+        await event.eor("✅ Read.")
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 @command("saved")
 async def saved_cmd(event):
     """Check saved-messages access."""
     me = await event.client.get_me()
-    return await event.reply(f"Saved messages ID: `{me.id}`")
+    return await event.eor(f"Saved messages ID: `{me.id}`")
 
 
 @command("dc")
@@ -48,7 +48,7 @@ async def dc_cmd(event):
     if dc is None:
         conn = getattr(event.client, "_connection", None)
         dc = getattr(conn, "dc_id", None)
-    return await event.reply(
+    return await event.eor(
         f"🖥 Session DC: `{dc if dc is not None else 'unknown'}`\n"
         f"Account: `{me.id}`"
     )
@@ -58,15 +58,15 @@ async def dc_cmd(event):
 async def jsonfmt_cmd(event):
     """Pretty-print a replied JSON. Usage: `.jsonfmt` (reply to JSON msg)"""
     if not event.reply_to:
-        return await event.reply("Reply to a JSON text message.")
+        return await event.eor("Reply to a JSON text message.")
     import json
     r = await event.get_reply_message()
     txt = getattr(r, "raw_text", "")
     try:
         data = json.loads(txt)
-        return await event.reply(f"```json\n{json.dumps(data, indent=2)[:3000]}\n```")
+        return await event.eor(f"```json\n{json.dumps(data, indent=2)[:3000]}\n```")
     except Exception:
-        return await event.reply("Not valid JSON.")
+        return await event.eor("Not valid JSON.")
 
 
 @command("urlparse")
@@ -76,9 +76,9 @@ async def urlparse_cmd(event):
     a = event.text.split(maxsplit=1)
     u = a[1].strip() if len(a) > 1 else ""
     if not u:
-        return await event.reply("Give a URL.")
+        return await event.eor("Give a URL.")
     s = urlsplit(u if "//" in u else "//" + u)
-    return await event.reply(
+    return await event.eor(
         f"**🔗 URL parts:**\nscheme: `{s.scheme}`\nnetloc: `{s.netloc}`\n"
         f"path: `{s.path}`\nquery: `{s.query}`\nfragment: `{s.fragment}`")
 
@@ -89,8 +89,8 @@ async def chars_cmd(event):
     a = event.text.split(maxsplit=1)
     t = a[1].strip() if len(a) > 1 else ""
     if not t:
-        return await event.reply("Give text.")
-    return await event.reply(
+        return await event.eor("Give text.")
+    return await event.eor(
         f"**🔢 Text stats:**\nCharacters: `{len(t)}`\nWords: `{len(t.split())}`\n"
         f"Lines: `{t.count(chr(10))+1}`")
 
@@ -101,16 +101,16 @@ async def emojiinfo_cmd(event):
     a = event.text.split(maxsplit=1)
     e = a[1].strip() if len(a) > 1 else ""
     if not e:
-        return await event.reply("Give an emoji.")
+        return await event.eor("Give an emoji.")
     ch = e[0]
-    return await event.reply(
+    return await event.eor(
         f"**🕵️ Emoji:**\nChar: `{ch}`\nCodepoint: `U+{ord(ch):04X}`\n"
         f"Unicode name: `{__import__('unicodedata').name(ch, '?')}`")
 
 @command("source")
 async def source_cmd(event):
     """XENO source info."""
-    return await event.reply(
+    return await event.eor(
         "**🧬 XENO Userbot**\n"
         "Original Python/Telethon project.\n"
         "Modules live in `plugins/` — browse with editors.")
@@ -121,4 +121,4 @@ async def shrug_cmd(event):
     """Classic shrug (append optional text)."""
     a = event.text.split(maxsplit=1)
     extra = (" " + a[1].strip()) if len(a) > 1 and a[1].strip() else ""
-    return await event.reply(f"¯\\_(ツ)_/¯{extra}")
+    return await event.eor(f"¯\\_(ツ)_/¯{extra}")

@@ -362,20 +362,20 @@ async def resolve_entity(target):
 async def play_cmd(event):
     """Attach the AI agent to a game bot. Usage: `.play @gamebot [goal]`"""
     if event.sender_id != config.OWNER_ID:
-        return await event.reply("🔒 Owner only.")
+        return await event.eor("🔒 Owner only.")
     args = (event.pattern_match.group(1) or "").split(maxsplit=1)
     if not args:
-        return await event.reply("Usage: `.play @gamebot [goal]`")
+        return await event.eor("Usage: `.play @gamebot [goal]`")
     target = args[0]
     goal = args[1] if len(args) > 1 else "play optimally"
     try:
         ent = await resolve_entity(target)
     except Exception as e:
-        return await event.reply(f"Cannot resolve `{target}`: {e}")
+        return await event.eor(f"Cannot resolve `{target}`: {e}")
     # `.play 12345` used to resolve to a *user*, and the agent would then try to
     # drive a DM conversation. Only attach to chats/bots.
     if isinstance(ent, int) or not getattr(ent, "bot", True):
-        return await event.reply(f"`{target}` isn't a bot. Give the game bot's @username.")
+        return await event.eor(f"`{target}` isn't a bot. Give the game bot's @username.")
     chat_id = ent.id
     sessions[chat_id] = {
         "goal": goal, "actions": 0, "fails": 0,
@@ -387,7 +387,7 @@ async def play_cmd(event):
     if last and last[0]:
         sessions[chat_id]["last_msg_id"] = last[0].id
     asyncio.ensure_future(watchdog(chat_id))
-    await event.reply(
+    await event.eor(
         f"🎮 Agent attached to `{target}`\nGoal: {goal}\n"
         f"Model: `{GAME_MODEL}`\n`.stopplay` to stop, "
         f"`.tip <text>` to guide it."
@@ -401,38 +401,38 @@ async def stopplay_cmd(event):
     if event.sender_id != config.OWNER_ID:
         return
     if not sessions:
-        return await event.reply("No active game sessions.")
+        return await event.eor("No active game sessions.")
     for cid in list(sessions):
         await detach(cid, "stopped by owner")
-    await event.reply("All game agents stopped.")
+    await event.eor("All game agents stopped.")
 
 
 @command("playstatus")
 async def playstatus_cmd(event):
     """Show status of active AI game agents."""
     if event.sender_id != config.OWNER_ID:
-        return await event.reply("🔒 Owner only.")
+        return await event.eor("🔒 Owner only.")
     if not sessions:
-        return await event.reply("No active game sessions.")
+        return await event.eor("No active game sessions.")
     lines = ["🎮 **Game agents**"]
     for cid, s in sessions.items():
         lines.append(
             f"`{cid}` — actions: `{s['actions']}/{MAX_ACTIONS}`, "
             f"last: `{s.get('last_action') or 'idle'}`"
         )
-    await event.reply("\n".join(lines))
+    await event.eor("\n".join(lines))
 
 
 @command(r"tip(?:\s+(.+))?")
 async def tip_cmd(event):
     """Give the active agent a strategy hint. Usage: `.tip <text>`"""
     if event.sender_id != config.OWNER_ID:
-        return await event.reply("🔒 Owner only.")
+        return await event.eor("🔒 Owner only.")
     text = (event.pattern_match.group(1) or "").strip()
     if not sessions:
-        return await event.reply("No active game sessions.")
+        return await event.eor("No active game sessions.")
     if not text:
-        return await event.reply("Usage: `.tip <what to do or avoid>`")
+        return await event.eor("Usage: `.tip <what to do or avoid>`")
     targets = []
     for cid, s in sessions.items():
         tips = s.setdefault("tips", [])
@@ -440,4 +440,4 @@ async def tip_cmd(event):
         del tips[:-MAX_TIPS]  # was unbounded: grew the prompt forever
         remember(cid, "TIP", text)
         targets.append(f"`{cid}`")
-    await event.reply(f"💡 Tip noted for {', '.join(targets)}.")
+    await event.eor(f"💡 Tip noted for {', '.join(targets)}.")

@@ -44,16 +44,16 @@ async def qrcode_cmd(event):
     a = event.text.split(maxsplit=1)
     txt = a[1].strip() if len(a) > 1 else ""
     if not txt:
-        return await event.reply("Give text/link to encode.")
+        return await event.eor("Give text/link to encode.")
     import qrcode
     try:
         img = qrcode.make(txt)
         buf = io.BytesIO()
         img.save(buf, format="PNG")
         buf.seek(0)
-        await event.reply("**QR generated**", file=buf)
+        await event.eor("**QR generated**", file=buf)
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 
@@ -71,11 +71,11 @@ async def telegraph_cmd(event):
             a = event.text.split(maxsplit=1)
             txt = a[1].strip() if len(a) > 1 else ""
         if not txt:
-            return await event.reply("Give text or reply to a text message.")
+            return await event.eor("Give text or reply to a text message.")
         url = await create_telegraph(txt.split("\n", 1)[0].strip()[:64] or "XENO", txt)
-        return await event.reply(f"**Telegraph:**\n{url}")
+        return await event.eor(f"**Telegraph:**\n{url}")
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
 
 
 @command("cpaste")
@@ -93,14 +93,14 @@ async def paste_cmd(event):
             a = event.text.split(maxsplit=1)
             txt = a[1].strip() if len(a) > 1 else ""
         if not txt:
-            return await event.reply("Give text or reply to a message or file.")
+            return await event.eor("Give text or reply to a message or file.")
         res = await post_form("https://paste.rs", data=txt, headers={"Content-Type": "text/plain"})
         url = (res or "").strip()
         if url.startswith("http"):
-            return await event.reply(f"**Paste.rs:** {url}")
-        return await event.reply(f"Paste failed: `{res[:200]}`")
+            return await event.eor(f"**Paste.rs:** {url}")
+        return await event.eor(f"Paste failed: `{res[:200]}`")
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
 
 
 @command("trans")
@@ -108,7 +108,7 @@ async def trans_cmd(event):
     """Quick translate (MyMemory free API). Usage: `.trans <langcode> <text>`"""
     a = event.text.split(maxsplit=2)
     if len(a) < 3:
-        return await event.reply("Usage: `.trans <target-lang> <text>` e.g. `.trans hi hello`")
+        return await event.eor("Usage: `.trans <target-lang> <text>` e.g. `.trans hi hello`")
     target, text = a[1], a[2]
     try:
         data = await get_json(
@@ -118,10 +118,10 @@ async def trans_cmd(event):
         if translated:
             if translated.startswith("MYMEMORY WARNING"):
                 translated = translated.split(":", 1)[-1].strip()
-            return await event.reply(f"**{target}:** `{translated}`")
-        return await event.reply("No translation available.")
+            return await event.eor(f"**{target}:** `{translated}`")
+        return await event.eor("No translation available.")
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
 
 
 @command("embed2")
@@ -130,9 +130,9 @@ async def embed2_cmd(event):
     a = event.text.split(maxsplit=1)
     txt = a[1].strip() if len(a) > 1 else ""
     if not txt:
-        return await event.reply("Give text.")
+        return await event.eor("Give text.")
     w = len(txt) + 4
-    return await event.reply(f"```┌{'─'*(w-2)}┐\n│ {txt} │\n└{'─'*(w-2)}┘```")
+    return await event.eor(f"```┌{'─'*(w-2)}┐\n│ {txt} │\n└{'─'*(w-2)}┘```")
 
 
 @command("pinall")
@@ -141,12 +141,12 @@ async def pinall_cmd(event):
     from core.auth import is_admin
 
     if not await is_admin(event.client, event.chat_id, event.sender_id):
-        return await event.reply("You need admin rights to pin.")
+        return await event.eor("You need admin rights to pin.")
     a = event.text.split(maxsplit=1)
     n = min(int(a[1]), 50) if len(a) > 1 and a[1].isdigit() else 10
     n = min(n, 50)
     if n < 1:
-        return await event.reply("Give a positive number.")
+        return await event.eor("Give a positive number.")
     count = 0
     try:
         msgs = await event.client.get_messages(event.chat_id, limit=n)
@@ -156,9 +156,9 @@ async def pinall_cmd(event):
                 count += 1
             except Exception:
                 break
-        await event.reply(f"**Pinned {count} messages.**")
+        await event.eor(f"**Pinned {count} messages.**")
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 @command("tpaste")
@@ -172,12 +172,12 @@ async def tpaste_cmd(event):
             a = event.text.split(maxsplit=1)
             txt = a[1].strip() if len(a) > 1 else ""
         if not txt:
-            return await event.reply("Give text or reply.")
+            return await event.eor("Give text or reply.")
         res = await post_form("https://paste.rs", data=txt, headers={"Content-Type": "text/plain"})
         url = (res or "").strip()
-        return await event.reply(f"```\n{txt[:1500]}\n```\n\n[Paste link]({url})" if url.startswith("http") else "Paste failed.")
+        return await event.eor(f"```\n{txt[:1500]}\n```\n\n[Paste link]({url})" if url.startswith("http") else "Paste failed.")
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
 
 
 @command("calc2")
@@ -186,7 +186,7 @@ async def calc2_cmd(event):
     a = event.text.split(maxsplit=1)
     expr = a[1].strip() if len(a) > 1 else ""
     if not expr:
-        return await event.reply("Usage: `.calc2 6*7`")
+        return await event.eor("Usage: `.calc2 6*7`")
     import ast
     import operator as op
     ops = {ast.Add: op.add, ast.Sub: op.sub, ast.Mult: op.mul, ast.Div: op.truediv,
@@ -216,6 +216,6 @@ async def calc2_cmd(event):
         raise TypeError("unsupported")
     try:
         result = _eval(ast.parse(expr, mode="eval").body)
-        return await event.reply(f"`{expr} = {result}`")
+        return await event.eor(f"`{expr} = {result}`")
     except Exception as e:
-        return await event.reply(f"Could not evaluate: `{e}`\nNumbers + `- * / % ** //` only.")
+        return await event.eor(f"Could not evaluate: `{e}`\nNumbers + `- * / % ** //` only.")

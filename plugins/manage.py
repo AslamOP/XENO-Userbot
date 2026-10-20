@@ -32,7 +32,7 @@ async def _deny(event, what):
     from core.auth import is_owner
 
     if not await is_owner(event):
-        await event.reply(f"🔒 Owner only — {what}.")
+        await event.eor(f"🔒 Owner only — {what}.")
         return True
     return False
 
@@ -99,15 +99,15 @@ async def addplugin_cmd(event):
 
     name, source, err = await _read_source(event)
     if err:
-        return await event.reply(err)
+        return await event.eor(err)
 
     replacing = name in custom.temp_list()
     ok, msg = custom.temp_install(name, source, origin=f"msg {event.id}")
     if not ok:
-        return await event.reply(f"❌ {msg}")
+        return await event.eor(f"❌ {msg}")
 
     kind = "Updated" if replacing else "Added"
-    await event.reply(
+    await event.eor(
         f"⚡ **{kind}** `{name}.py` — {msg}, live now.\n"
         f"Session-only: a restart deletes it. `.install` to make it permanent.\n"
         f"`.delplugin {name}` to drop it sooner."
@@ -122,10 +122,10 @@ async def delplugin_cmd(event):
     a = event.text.split(maxsplit=1)
     if len(a) < 2:
         names = ", ".join(sorted(custom.temp_list())) or "none"
-        return await event.reply(f"Usage: `.delplugin <name>`\nTemporary: {names}")
+        return await event.eor(f"Usage: `.delplugin <name>`\nTemporary: {names}")
     name = a[1].strip().lstrip("./").removesuffix(".py")
     ok, msg = custom.temp_remove(name)
-    await event.reply(("🗑 " if ok else "❌ ") + msg)
+    await event.eor(("🗑 " if ok else "❌ ") + msg)
 
 
 # ---------------------------------------------------------------- persistent
@@ -147,21 +147,21 @@ async def install_cmd(event):
 
     name, source, err = await _read_source(event)
     if err:
-        return await event.reply(err)
+        return await event.eor(err)
 
     if custom.is_protected(name):
-        return await event.reply(
+        return await event.eor(
             f"❌ `{name}` is a built-in XENO module. Rename your file."
         )
 
     hits = safety.scan(source)
     if hits and not force:
-        return await event.reply(safety.report(hits, f"{name}.py"))
+        return await event.eor(safety.report(hits, f"{name}.py"))
 
     replacing = custom.is_custom(name)
     ok, msg = custom.install(name, source, origin=f"msg {event.id}")
     if not ok:
-        return await event.reply(f"❌ {msg}")
+        return await event.eor(f"❌ {msg}")
 
     if hits and force:
         warn = (
@@ -172,7 +172,7 @@ async def install_cmd(event):
         warn = ""
 
     kind = "Updated" if replacing else "Installed"
-    await event.reply(
+    await event.eor(
         f"💾 **{kind}** `addons/{name}.py` — {msg}.\n"
         f"Survives restarts · `.unload {name}` to switch off · "
         f"`.uninstall {name}` to delete{warn}"
@@ -187,10 +187,10 @@ async def uninstall_cmd(event):
     a = event.text.split(maxsplit=1)
     if len(a) < 2:
         names = ", ".join(sorted(custom.list_custom())) or "none"
-        return await event.reply(f"Usage: `.uninstall <name>`\nInstalled: {names}")
+        return await event.eor(f"Usage: `.uninstall <name>`\nInstalled: {names}")
     name = a[1].strip().lstrip("./").removesuffix(".py")
     ok, msg = custom.remove(name)
-    await event.reply(("🗑 " if ok else "❌ ") + msg)
+    await event.eor(("🗑 " if ok else "❌ ") + msg)
 
 
 # ---------------------------------------------------- load / unload a toggle
@@ -201,14 +201,14 @@ async def load_cmd(event):
         return
     name = event.pattern_match.group(1).strip().lstrip("./").removesuffix(".py")
     if not custom.is_custom(name):
-        return await event.reply(
+        return await event.eor(
             f"❌ No installed addon called `{name}`. `.plugins` to list them."
         )
     custom.set_disabled(name, False)
     ok, msg = custom.load(name)
     if not ok:
-        return await event.reply(f"❌ Still disabled — {msg}")
-    await event.reply(f"▶️ **`{name}` loaded** — {msg}. It stays on across restarts.")
+        return await event.eor(f"❌ Still disabled — {msg}")
+    await event.eor(f"▶️ **`{name}` loaded** — {msg}. It stays on across restarts.")
 
 
 @command(r"unload\s+(\S+)")
@@ -218,16 +218,16 @@ async def unload_cmd(event):
         return
     name = event.pattern_match.group(1).strip().lstrip("./").removesuffix(".py")
     if custom.is_protected(name) and not custom.is_custom(name):
-        return await event.reply(
+        return await event.eor(
             f"❌ `{name}` is a built-in module — you can't unload it from chat."
         )
     if not custom.is_custom(name):
-        return await event.reply(
+        return await event.eor(
             f"❌ No installed addon called `{name}`. `.plugins` to list them."
         )
     n = custom.unload(name)
     custom.set_disabled(name, True)
-    await event.reply(
+    await event.eor(
         f"⏸️ **`{name}` unloaded** — {n} command(s) removed.\n"
         f"The file is still in `addons/`, so you can read it or `.load {name}` "
         f"to bring it back."
@@ -275,4 +275,4 @@ async def plugins_cmd(event):
     lines.append(
         "\n_Built-ins can't be removed here — delete the file on the server for that._"
     )
-    await event.reply("\n".join(lines)[:4000])
+    await event.eor("\n".join(lines)[:4000])

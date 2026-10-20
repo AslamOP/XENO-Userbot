@@ -96,7 +96,7 @@ def _banner_txt(word):
 @command("font")
 async def font_cmd(event):
     """Info on available fonts for text styling."""
-    return await event.reply(
+    return await event.eor(
         "**Font styles (usage `.txt <style> <text>`):**\n"
         "`bold`, `italic`, `mono`, `script`, `fraktur`, `circled`, `squared`\n\n"
         "Example: `.txt bold XENO IS LIVE`")
@@ -107,13 +107,13 @@ async def txt_cmd(event):
     """Style a text with a font. Usage: `.txt <style> <text>`"""
     a = event.text.split(maxsplit=2)
     if len(a) < 3:
-        return await event.reply("Usage: `.txt <bold|italic|mono|script|fraktur|circled|squared> <text>`")
+        return await event.eor("Usage: `.txt <bold|italic|mono|script|fraktur|circled|squared> <text>`")
     style = a[1].lower()
     text = a[2]
     if style not in _FONTS:
-        return await event.reply("Unknown style. Run `.font` for the list.")
+        return await event.eor("Unknown style. Run `.font` for the list.")
     out = _convert(text, style, None)
-    await event.reply(out if out else "Empty.")
+    await event.eor(out if out else "Empty.")
 
 
 @command("banner")
@@ -122,11 +122,11 @@ async def banner_cmd(event):
     a = event.text.split(maxsplit=1)
     text = a[1].strip() if len(a) > 1 else ""
     if not text or len(text) > 12:
-        return await event.reply("Give up to 12 chars: `.banner <text>`")
+        return await event.eor("Give up to 12 chars: `.banner <text>`")
     try:
-        await event.reply(_banner_txt(text))
+        await event.eor(_banner_txt(text))
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 @command("art")
@@ -140,7 +140,7 @@ async def art_cmd(event):
         "   /\n  //\n //\\\n||  \\_\n||   /\n \\\\ /\n  \\\\",
         "   .'`'.\n  / ,   \\\n |  .'.  |\n  \\ /^\\ /\n   `---'",
     ]
-    await event.reply("```\n" + random.choice(arts) + "\n```")
+    await event.eor("```\n" + random.choice(arts) + "\n```")
 
 
 @command("now")
@@ -156,7 +156,7 @@ async def now_cmd(event):
         hrs, rem = divmod(rem, 3600)
         mins, secs = divmod(rem, 60)
         upt = f"**Uptime:** `{days}d {hrs}h {mins}m {secs}s`"
-    await event.reply(
+    await event.eor(
         f"**🕐 UTC:** `{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}`\n"
         f"**Local:** `{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}`\n"
         f"{upt}")
@@ -168,13 +168,13 @@ async def when_cmd(event):
     a = event.text.split(maxsplit=1)
     q = a[1].strip() if len(a) > 1 else ""
     if not q:
-        return await event.reply("Give a timezone. Usage: `.when Asia/Kolkata`")
+        return await event.eor("Give a timezone. Usage: `.when Asia/Kolkata`")
     from plugins.world import _zone_now
 
     now, off, _abbr = _zone_now(q)
     if now is None:
-        return await event.reply(
+        return await event.eor(
             f"Can't resolve `{q}`. Use an IANA zone like `Asia/Kolkata` — "
             "`.zones <substring>` lists them."
         )
-    await event.reply(f"**🕐 {q}**\n`{now.strftime('%Y-%m-%d %H:%M:%S %Z')}`\nUTC offset: `{off}`")
+    await event.eor(f"**🕐 {q}**\n`{now.strftime('%Y-%m-%d %H:%M:%S %Z')}`\nUTC offset: `{off}`")

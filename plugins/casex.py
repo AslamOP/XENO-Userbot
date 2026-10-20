@@ -30,13 +30,13 @@ for _cname, _cfunc in _CASES.items():
             a = event.text.split(maxsplit=1)
             arg = a[1].strip() if len(a) > 1 else ""
             if not arg:
-                return await event.reply(f"Give text. Usage: `.{name} <text>`")
+                return await event.eor(f"Give text. Usage: `.{name} <text>`")
             try:
                 val = fn(arg)
                 out = val if str(val) else "(empty)"
-                return await event.reply(f"**{name}:**\n`{out}`")
+                return await event.eor(f"**{name}:**\n`{out}`")
             except Exception as e:
-                return await event.reply(f"Error: `{e}`")
+                return await event.eor(f"Error: `{e}`")
         _chandler.__name__ = f"case_{name}"
         _chandler.__doc__ = f"Transform text via {name}."
         return _chandler
@@ -46,5 +46,5 @@ for _cname, _cfunc in _CASES.items():
 @command("cases")
 async def cases_cmd(event):
     """List all case transforms."""
-    return await event.reply(
+    return await event.eor(
         f"**🔤 Case transforms:**\n`{', '.join(sorted(_CASES.keys()))}`")

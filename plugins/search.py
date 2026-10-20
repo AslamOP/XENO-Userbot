@@ -12,7 +12,7 @@ async def github_cmd(event):
     args = event.text.split(maxsplit=1)
     q = args[1].strip() if len(args) > 1 else ""
     if not q:
-        return await event.reply("Give a search query. Usage: `.github <query>`")
+        return await event.eor("Give a search query. Usage: `.github <query>`")
     try:
         data = await get_json(
             "https://api.github.com/search/repositories",
@@ -20,17 +20,17 @@ async def github_cmd(event):
             headers={"Accept": "application/vnd.github+json", "User-Agent": "xeno-userbot"},
         )
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
     items = data.get("items", [])
     if not items:
-        return await event.reply(f"No repos found for `{q}`.")
+        return await event.eor(f"No repos found for `{q}`.")
     lines = [f"**🐙 GitHub: `{q}`**", ""]
     for r in items:
         lines.append(
             f"**[{r['full_name']}]({r['html_url']})** ⭐{r.get('stargazers_count', 0)}\n"
             f"`{(r.get('description') or '')[:90]}`"
         )
-    await event.reply("\n".join(lines))
+    await event.eor("\n".join(lines))
 
 
 @command("search")
@@ -39,12 +39,12 @@ async def search_cmd(event):
     args = event.text.split(maxsplit=1)
     q = args[1].strip() if len(args) > 1 else ""
     if not q:
-        return await event.reply("Give a query. Usage: `.search <query>`")
+        return await event.eor("Give a query. Usage: `.search <query>`")
     url = "https://lite.duckduckgo.com/lite/"
     try:
         html = await get_text(url, params={"q": q})
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
     # lift results from the classic lite HTML: <a rel="nofollow" href="...">title</a> + snippet rows
     import re as _re
     links = _re.findall(r'<a rel="nofollow" href="([^"]+)"[^>]*>(.*?)</a>', html)[:8]
@@ -59,8 +59,8 @@ async def search_cmd(event):
                 href = "https:" + href
             lines.append(f"**[{text}]({href})**")
     if len(lines) == 2:
-        return await event.reply(f"No results for `{q}`.")
-    await event.reply("\n".join(lines))
+        return await event.eor(f"No results for `{q}`.")
+    await event.eor("\n".join(lines))
 
 
 @command("wikip")
@@ -69,15 +69,15 @@ async def wikip_cmd(event):
     args = event.text.split(maxsplit=1)
     topic = args[1].strip() if len(args) > 1 else ""
     if not topic:
-        return await event.reply("Give an article title. Usage: `.wikip <title>`")
+        return await event.eor("Give an article title. Usage: `.wikip <title>`")
     try:
         data = await get_json(
             "https://en.wikipedia.org/api/rest_v1/page/summary/" + urllib.parse.quote(topic),
         )
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
     if data.get("type") == "disambiguation":
-        return await event.reply(f"`{topic}` is ambiguous — be more specific.")
+        return await event.eor(f"`{topic}` is ambiguous — be more specific.")
     title = data.get("title", topic)
     extract = data.get("extract", "")
     url = data.get("content_urls", {}).get("desktop", {}).get("page", "#")
@@ -87,11 +87,11 @@ async def wikip_cmd(event):
         lines.append(f"\n[Wikipedia]({url})")
     if thumb:
         try:
-            await event.reply("\n".join(lines), file=thumb)
+            await event.eor("\n".join(lines), file=thumb)
         except Exception:
-            await event.reply("\n".join(lines))
+            await event.eor("\n".join(lines))
     else:
-        await event.reply("\n".join(lines))
+        await event.eor("\n".join(lines))
 
 
 @command("books")
@@ -100,17 +100,17 @@ async def books_cmd(event):
     args = event.text.split(maxsplit=1)
     q = args[1].strip() if len(args) > 1 else ""
     if not q:
-        return await event.reply("Give a book query. Usage: `.books <query>`")
+        return await event.eor("Give a book query. Usage: `.books <query>`")
     try:
         data = await get_json(
             "https://www.googleapis.com/books/v1/volumes",
             {"q": q, "maxResults": 5},
         )
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
     items = data.get("items", [])
     if not items:
-        return await event.reply("No books found.")
+        return await event.eor("No books found.")
     lines = [f"**📔 Google Books: `{q}`**", ""]
     for it in items:
         vi = it.get("volumeInfo", {})
@@ -118,7 +118,7 @@ async def books_cmd(event):
         authors = ", ".join(vi.get("authors", []) or ["?"])
         link = it.get("selfLink", "")
         lines.append(f"**{title}** — by {authors}")
-    await event.reply("\n".join(lines))
+    await event.eor("\n".join(lines))
 
 
 @command("hn")
@@ -127,7 +127,7 @@ async def hn_cmd(event):
     try:
         ids = await get_json("https://hacker-news.firebaseio.com/v0/topstories.json")
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
     await event.client.send_message(
         event.chat_id,
         f"**📰 Top Hacker News:**\n*(fetching…)*",
@@ -143,7 +143,7 @@ async def hn_cmd(event):
         except Exception:
             continue
     if not lines:
-        return await event.reply("No stories right now.")
+        return await event.eor("No stories right now.")
     await event.client.send_message(event.chat_id, "\n".join(["**📰 Top Hacker News:**", ""] + lines))
 
 
@@ -156,11 +156,11 @@ async def randomuser_cmd(event):
             params={"nat": "us"},
         )
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
     u = data["results"][0]
     name = f"{u['name']['first']} {u['name']['last']}"
     loc = f"{u['location']['city']}, {u['location']['state']}"
-    await event.reply(
+    await event.eor(
         f"**👤 {name}**\n"
         f"Gender: `{u['gender']}`\n"
         f"Email: `{u['email']}`\n"

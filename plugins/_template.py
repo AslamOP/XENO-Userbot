@@ -26,7 +26,7 @@ async def mytask_cmd(event):
     """
     args = event.text.split(maxsplit=1)
     arg = args[1].strip() if len(args) > 1 else ""
-    await event.reply(f"got: `{arg}`" if arg else "Usage: `.mytask <something>`")
+    await event.eor(f"got: `{arg}`" if arg else "Usage: `.mytask <something>`")
 
 
 # --- 2. a command that reads and writes the shared db -----------------------
@@ -38,17 +38,17 @@ async def memo_cmd(event):
     """
     a = event.text.split(maxsplit=2)
     if len(a) < 2:
-        return await event.reply("Usage: `.memo <key> [text]`")
+        return await event.eor("Usage: `.memo <key> [text]`")
 
     key = a[1].lower()
     if len(a) < 3:
         val = await db_get(f"memo:{key}", None)
         if val is None:
-            return await event.reply(f"No memo `{key}`.")
-        return await event.reply(f"**{key}**\n{val}")
+            return await event.eor(f"No memo `{key}`.")
+        return await event.eor(f"**{key}**\n{val}")
 
     await db_set(f"memo:{key}", a[2].strip())
-    await event.reply(f"📌 `{key}` saved.")
+    await event.eor(f"📌 `{key}` saved.")
 
 
 # --- 3. an owner-only command ------------------------------------------------
@@ -56,14 +56,14 @@ async def memo_cmd(event):
 async def mytask_reset_cmd(event):
     """Owner: clear every memo. Usage: `.mytask_reset`"""
     if not await is_owner(event):
-        return await event.reply("🔒 Owner only.")
+        return await event.eor("🔒 Owner only.")
     from core.db import delete as db_delete
 
     keys = [k for k in (await db_get("_memo_keys", [])) or []]
     for k in keys:
         await db_delete(f"memo:{k}")
     await db_set("_memo_keys", [])
-    await event.reply(f"🧹 Cleared `{len(keys)}` memos.")
+    await event.eor(f"🧹 Cleared `{len(keys)}` memos.")
 
 
 # --- 4. a command that needs an API key --------------------------------------
@@ -76,12 +76,12 @@ async def example_api_cmd(event):
     a = event.text.split(maxsplit=1)
     q = a[1].strip() if len(a) > 1 else ""
     if not q:
-        return await event.reply("Give a query. Usage: `.example_api <query>`")
+        return await event.eor("Give a query. Usage: `.example_api <query>`")
     try:
         data = await get_json("https://api.example.com/search", {"q": q})
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
-    await event.reply(f"got {len(data) if hasattr(data, '__len__') else '?'} results")
+        return await event.eor(f"Error: `{e}`")
+    await event.eor(f"got {len(data) if hasattr(data, '__len__') else '?'} results")
 
 
 # --- 5. a command that acts on a replied message ------------------------------
@@ -89,10 +89,10 @@ async def example_api_cmd(event):
 async def mytask_react_cmd(event):
     """React to the replied message. Usage: on a reply"""
     if not event.reply_to:
-        return await event.reply("Reply to a message.")
+        return await event.eor("Reply to a message.")
     rep = await event.get_reply_message()
     await event.client.send_reaction(event.chat_id, rep.id, emoji="✅")
-    await event.reply("Done.")
+    await event.eor("Done.")
 
 
 # --- 6. an ambient handler (reacts to OTHER people's messages) ---------------
@@ -119,4 +119,4 @@ async def mytask_greeter(event):
     if event.is_private:
         return
     if "hello" in (event.text or "").lower():
-        await event.reply("Hi there.")
+        await event.eor("Hi there.")

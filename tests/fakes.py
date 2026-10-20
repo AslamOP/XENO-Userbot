@@ -173,6 +173,12 @@ class Cap:
         self.buttons = k.get("buttons")
         return self
 
+    async def eor(self, *a, **k):
+        return await self.reply(*a, **k)
+
+    async def eod(self, *a, **k):
+        return await self.reply(*a, **k)
+
     async def answer(self, *a, **k):
         return self
 

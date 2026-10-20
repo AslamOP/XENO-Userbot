@@ -16,15 +16,15 @@ async def meaning_cmd(event):
     args = event.text.split(maxsplit=1)
     word = args[1].strip() if len(args) > 1 else ""
     if not word:
-        return await event.reply("Give a word. Usage: `.meaning <word>`")
+        return await event.eor("Give a word. Usage: `.meaning <word>`")
     try:
         data = await get_json(f"https://api.dictionaryapi.dev/api/v2/entries/en/{urllib.parse.quote(word)}")
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
     if isinstance(data, dict) and data.get("title"):
-        return await event.reply(f"❌ No definition found for `{word}`.\n`{data.get('message','')}`")
+        return await event.eor(f"❌ No definition found for `{word}`.\n`{data.get('message','')}`")
     if not isinstance(data, list) or not data:
-        return await event.reply("No result.")
+        return await event.eor("No result.")
     entry = data[0]
     lines = [f"**📖 {entry.get('word','').title()}**"]
     phone = entry.get("phonetic")
@@ -39,7 +39,7 @@ async def meaning_cmd(event):
     syn = _join(entry.get("meanings", [{}])[0].get("synonyms", [])) if entry.get("meanings") else ""
     if syn:
         lines.append(f"\n**Synonyms:** {syn}")
-    await event.reply("\n".join(lines)[:4000])
+    await event.eor("\n".join(lines)[:4000])
 
 
 @command("synonym")
@@ -48,16 +48,16 @@ async def synonym_cmd(event):
     args = event.text.split(maxsplit=1)
     word = args[1].strip() if len(args) > 1 else ""
     if not word:
-        return await event.reply("Give a word. Usage: `.synonym <word>`")
+        return await event.eor("Give a word. Usage: `.synonym <word>`")
     try:
         data = await get_json("https://api.datamuse.com/words", {"rel_syn": word, "max": 20})
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
     if not data:
-        return await event.reply(f"No synonyms for `{word}`.")
+        return await event.eor(f"No synonyms for `{word}`.")
     res = [f"**🔁 Synonyms of `{word}`:**", ""]
     res.append("\n".join(f"• `{x['word']}`" for x in data))
-    await event.reply("\n".join(res))
+    await event.eor("\n".join(res))
 
 
 @command("antonym")
@@ -66,16 +66,16 @@ async def antonym_cmd(event):
     args = event.text.split(maxsplit=1)
     word = args[1].strip() if len(args) > 1 else ""
     if not word:
-        return await event.reply("Give a word. Usage: `.antonym <word>`")
+        return await event.eor("Give a word. Usage: `.antonym <word>`")
     try:
         data = await get_json("https://api.datamuse.com/words", {"rel_ant": word, "max": 20})
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
     if not data:
-        return await event.reply(f"No antonyms for `{word}`.")
+        return await event.eor(f"No antonyms for `{word}`.")
     res = [f"**⚖️ Antonyms of `{word}`:**", ""]
     res.append("\n".join(f"• `{x['word']}`" for x in data))
-    await event.reply("\n".join(res))
+    await event.eor("\n".join(res))
 
 
 @command("rhyme")
@@ -84,16 +84,16 @@ async def rhyme_cmd(event):
     args = event.text.split(maxsplit=1)
     word = args[1].strip() if len(args) > 1 else ""
     if not word:
-        return await event.reply("Give a word. Usage: `.rhyme <word>`")
+        return await event.eor("Give a word. Usage: `.rhyme <word>`")
     try:
         data = await get_json("https://api.datamuse.com/words", {"rel_rhy": word, "max": 25})
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
     if not data:
-        return await event.reply(f"No rhymes for `{word}`.")
+        return await event.eor(f"No rhymes for `{word}`.")
     res = [f"**🎶 Rhymes with `{word}`:**", ""]
     res.append("\n".join(f"• `{x['word']}`" for x in data))
-    await event.reply("\n".join(res))
+    await event.eor("\n".join(res))
 
 
 @command("ud")
@@ -102,21 +102,21 @@ async def ud_cmd(event):
     args = event.text.split(maxsplit=1)
     term = args[1].strip() if len(args) > 1 else ""
     if not term:
-        return await event.reply("Give a term. Usage: `.ud <term>`")
+        return await event.eor("Give a term. Usage: `.ud <term>`")
     try:
         data = await get_json(
             "https://api.urbandictionary.com/v0/define",
             {"term": term},
         )
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
     lst = data.get("list", [])
     if not lst:
-        return await event.reply(f"No definition for `{term}` on Urban Dictionary.")
+        return await event.eor(f"No definition for `{term}` on Urban Dictionary.")
     d = lst[0]
     defn = d.get("definition", "").replace("[", "**").replace("]", "**")
     ex = d.get("example", "").replace("[", "**").replace("]", "**")
-    await event.reply(
+    await event.eor(
         f"**📚 {d.get('word','').upper()}**\n"
         f"\n{defn[:1800]}\n"
         f"\n**Example:**\n{ex[:800]}\n"
@@ -130,16 +130,16 @@ async def wordapi_cmd(event):
     try:
         words = await get_json("https://api.datamuse.com/words", {"sp": "?????", "max": 1})
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
     if not words:
-        return await event.reply("Could not pick a random word.")
+        return await event.eor("Could not pick a random word.")
     word = words[0]["word"]
     try:
         data = await get_json(f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}")
     except Exception as e:
         # Was unguarded: the exception escaped the handler and the user got
         # no reply at all.
-        return await event.reply(f"**🎲 Random word: `{word}`**\n*(No dictionary entry: `{e}`.)*")
+        return await event.eor(f"**🎲 Random word: `{word}`**\n*(No dictionary entry: `{e}`.)*")
     lines = [f"**🎲 Random word: `{word}`**"]
     if isinstance(data, list) and data:
         for m in data[0].get("meanings", [])[:2]:
@@ -147,4 +147,4 @@ async def wordapi_cmd(event):
                 lines.append(f"*{m.get('partOfSpeech','')}*: {d.get('definition','')}")
                 if d.get("example"):
                     lines.append(f"   _e.g. {d.get('example')}_")
-    await event.reply("\n".join(lines)[:3000])
+    await event.eor("\n".join(lines)[:3000])

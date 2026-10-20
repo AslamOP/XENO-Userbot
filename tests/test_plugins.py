@@ -44,6 +44,12 @@ class Cap:
         self.sent = a[0] if a else None
         return self
 
+    async def eor(self, *a, **k):
+        return await self.reply(*a, **k)
+
+    async def eod(self, *a, **k):
+        return await self.reply(*a, **k)
+
     async def edit(self, *a, **k):
         return self
 

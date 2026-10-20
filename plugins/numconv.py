@@ -31,12 +31,12 @@ for _name, _fn in _CONV.items():
             a = event.text.split(maxsplit=1)
             arg = a[1].strip() if len(a) > 1 else ""
             if not arg:
-                return await event.reply(f"Give a value. Usage: `.{name} <value>`")
+                return await event.eor(f"Give a value. Usage: `.{name} <value>`")
             try:
                 val = fn(arg)
-                return await event.reply(f"**{name}:** `{val}`")
+                return await event.eor(f"**{name}:** `{val}`")
             except Exception:
-                return await event.reply(f"Invalid input for `.{name}`")
+                return await event.eor(f"Invalid input for `.{name}`")
         _handler.__name__ = f"conv_{name}"
         _handler.__doc__ = f"Convert using {name}."
         return _handler
@@ -47,7 +47,7 @@ for _name, _fn in _CONV.items():
 @command("math")
 async def math_cmd(event):
     """Simple math formatting helpers menu. Run sub-commands: prim, fib, factorial, etc."""
-    return await event.reply(
+    return await event.eor(
         "**🔢 math helpers:**\n"
         "`prim <n>` prime?  `fib <n>`  `factorial <n>`  `gcd a b`  `lcm a b`\n"
         "`sqrt <n>`  `cbrt <n>`  `powc a b`  `logc <n>`\n"
@@ -61,20 +61,20 @@ async def prim_cmd(event):
     try:
         n = int(arg)
     except ValueError:
-        return await event.reply("Give an integer.")
+        return await event.eor("Give an integer.")
     if n < 2:
-        return await event.reply(f"`{n}` is not prime.")
+        return await event.eor(f"`{n}` is not prime.")
     # Trial division is O(sqrt(n)); without a ceiling a big input pins this
     # handler (and its task) indefinitely.
     if n > 10 ** 14:
-        return await event.reply(
+        return await event.eor(
             f"`{n}` is too large for trial division (limit 10^14). "
             "Use a primality library for numbers this big."
         )
     for i in range(2, int(math.isqrt(n)) + 1):
         if n % i == 0:
-            return await event.reply(f"`{n}` is **not** prime (divisible by {i}).")
-    return await event.reply(f"`{n}` is **prime** ✅")
+            return await event.eor(f"`{n}` is **not** prime (divisible by {i}).")
+    return await event.eor(f"`{n}` is **prime** ✅")
 
 
 @command("fib")
@@ -84,15 +84,15 @@ async def fib_cmd(event):
     try:
         n = int(arg)
     except ValueError:
-        return await event.reply("Give a count. Usage: `.fib <n>`")
+        return await event.eor("Give a count. Usage: `.fib <n>`")
     if n < 1 or n > 1000:
-        return await event.reply("n between 1 and 1000.")
+        return await event.eor("n between 1 and 1000.")
     x, y = 0, 1
     seq = []
     for _ in range(n):
         seq.append(x)
         x, y = y, x + y
-    return await event.reply(f"**Fibonacci ({n}):**\n{', '.join(map(str, seq))}")
+    return await event.eor(f"**Fibonacci ({n}):**\n{', '.join(map(str, seq))}")
 
 
 @command("factorial")
@@ -102,13 +102,13 @@ async def fact_cmd(event):
     try:
         n = int(arg)
     except ValueError:
-        return await event.reply(f"Give an integer. Usage: `.factorial <n>` (0-{MAX_FACTORIAL})")
+        return await event.eor(f"Give an integer. Usage: `.factorial <n>` (0-{MAX_FACTORIAL})")
     if n < 0 or n > MAX_FACTORIAL:
-        return await event.reply(f"n between 0 and {MAX_FACTORIAL}.")
+        return await event.eor(f"n between 0 and {MAX_FACTORIAL}.")
     r = math.factorial(n)
     if len(str(r)) > 3500:
-        return await event.reply(f"`{n}!` has {len(str(r))} digits — too long to send.")
-    return await event.reply(f"**{n}!** = `{r}`")
+        return await event.eor(f"`{n}!` has {len(str(r))} digits — too long to send.")
+    return await event.eor(f"**{n}!** = `{r}`")
 
 
 def _two_ints(event):
@@ -124,18 +124,18 @@ def _two_ints(event):
 async def gcd_cmd(event):
     x, y = _two_ints(event)
     if x is None:
-        return await event.reply("Give two integers. Usage: `.gcd 12 18`")
-    return await event.reply(f"**gcd({x},{y})** = `{math.gcd(x, y)}`")
+        return await event.eor("Give two integers. Usage: `.gcd 12 18`")
+    return await event.eor(f"**gcd({x},{y})** = `{math.gcd(x, y)}`")
 
 
 @command("lcm")
 async def lcm_cmd(event):
     a, b = _two_ints(event)
     if a is None:
-        return await event.reply("Give two integers. Usage: `.lcm 4 6`")
+        return await event.eor("Give two integers. Usage: `.lcm 4 6`")
     if a == 0 or b == 0:
-        return await event.reply("lcm is 0 when either value is 0.")
-    return await event.reply(f"**lcm({a},{b})** = `{abs(a * b) // math.gcd(a, b)}`")
+        return await event.eor("lcm is 0 when either value is 0.")
+    return await event.eor(f"**lcm({a},{b})** = `{abs(a * b) // math.gcd(a, b)}`")
 
 
 @command("sqrt")
@@ -145,10 +145,10 @@ async def sqrt_cmd(event):
     try:
         n = float(arg)
     except ValueError:
-        return await event.reply("Give a number.")
+        return await event.eor("Give a number.")
     if n < 0:
-        return await event.reply("sqrt requires a non-negative number.")
-    return await event.reply(f"√{n} = `{math.sqrt(n):.6f}`")
+        return await event.eor("sqrt requires a non-negative number.")
+    return await event.eor(f"√{n} = `{math.sqrt(n):.6f}`")
 
 
 @command("cbrt")
@@ -158,9 +158,9 @@ async def cbrt_cmd(event):
     try:
         n = float(arg)
     except ValueError:
-        return await event.reply("Give a number.")
+        return await event.eor("Give a number.")
     r = math.copysign(abs(n) ** (1 / 3), n)
-    return await event.reply(f"∛{n} = `{r:.6f}`")
+    return await event.eor(f"∛{n} = `{r:.6f}`")
 
 
 @command("powc")
@@ -169,8 +169,8 @@ async def powc_cmd(event):
     try:
         x, y = float(a[1]), float(a[2])
     except Exception:
-        return await event.reply("Usage: `.powc <base> <exp>`")
-    return await event.reply(f"`{x}^{y}` = `{x ** y:g}`")
+        return await event.eor("Usage: `.powc <base> <exp>`")
+    return await event.eor(f"`{x}^{y}` = `{x ** y:g}`")
 
 
 @command("logc")
@@ -180,10 +180,10 @@ async def logc_cmd(event):
     try:
         n = float(arg)
     except ValueError:
-        return await event.reply("Give a number > 0.")
+        return await event.eor("Give a number > 0.")
     if n <= 0:
-        return await event.reply("log requires positive number.")
-    return await event.reply(f"ln({n}) = `{math.log(n):.6f}`\nlog10({n}) = `{math.log10(n):.6f}`")
+        return await event.eor("log requires positive number.")
+    return await event.eor(f"ln({n}) = `{math.log(n):.6f}`\nlog10({n}) = `{math.log10(n):.6f}`")
 
 
 @command("avg")
@@ -192,10 +192,10 @@ async def avg_cmd(event):
     try:
         nums = [float(x) for x in a[1:]]
     except Exception:
-        return await event.reply("Give numbers: `.avg 1 2 3 4`")
+        return await event.eor("Give numbers: `.avg 1 2 3 4`")
     if not nums:
-        return await event.reply("Give numbers: `.avg 1 2 3`")
-    return await event.reply(f"**Average** of `{', '.join(map(str, nums))}` = `{sum(nums)/len(nums):.4f}`")
+        return await event.eor("Give numbers: `.avg 1 2 3`")
+    return await event.eor(f"**Average** of `{', '.join(map(str, nums))}` = `{sum(nums)/len(nums):.4f}`")
 
 
 @command("sumc")
@@ -204,10 +204,10 @@ async def sumc_cmd(event):
     try:
         nums = [float(x) for x in a[1:]]
     except Exception:
-        return await event.reply("Give numbers: `.sumc 1 2 3`")
+        return await event.eor("Give numbers: `.sumc 1 2 3`")
     if not nums:
-        return await event.reply("Give numbers.")
-    return await event.reply(f"**Sum** = `{sum(nums):g}`")
+        return await event.eor("Give numbers.")
+    return await event.eor(f"**Sum** = `{sum(nums):g}`")
 
 
 @command("pct")
@@ -216,10 +216,10 @@ async def pct_cmd(event):
     try:
         part, whole = float(a[1]), float(a[2])
     except Exception:
-        return await event.reply("Usage: `.pct <part> <whole>`")
+        return await event.eor("Usage: `.pct <part> <whole>`")
     if whole == 0:
-        return await event.reply("Whole can't be 0.")
-    return await event.reply(f"`{part}` is **{part/whole*100:.2f}%** of `{whole}`")
+        return await event.eor("Whole can't be 0.")
+    return await event.eor(f"`{part}` is **{part/whole*100:.2f}%** of `{whole}`")
 
 
 @command("datastats")
@@ -228,9 +228,9 @@ async def stats_cmd(event):
     try:
         nums = [float(x) for x in a[1:]]
     except Exception:
-        return await event.reply("Give numbers: `.stats 1 2 3`")
+        return await event.eor("Give numbers: `.stats 1 2 3`")
     if not nums:
-        return await event.reply("Give numbers.")
+        return await event.eor("Give numbers.")
     mean = sum(nums) / len(nums)
     srt = sorted(nums)
     if len(nums) % 2 == 0:
@@ -238,7 +238,7 @@ async def stats_cmd(event):
     else:
         med = srt[len(nums)//2]
     vari = sum((x - mean) ** 2 for x in nums) / len(nums)
-    return await event.reply(
+    return await event.eor(
         f"**Stats:**\nCount: `{len(nums)}`\nSum: `{sum(nums):g}`\n"
         f"Mean: `{mean:.4f}`\nMedian: `{med:.4f}`\n"
         f"Min: `{min(nums):g}`  Max: `{max(nums):g}`\n"
@@ -285,12 +285,12 @@ for _uname, _ufn in _UNITS.items():
             a = event.text.split(maxsplit=1)
             arg = a[1].strip() if len(a) > 1 else ""
             if not arg:
-                return await event.reply(f"Give a value. Usage: `.{name} <value>`")
+                return await event.eor(f"Give a value. Usage: `.{name} <value>`")
             try:
                 v = float(arg)
-                return await event.reply(f"**{name}:** `{v}` → `{fn(v):g}`")
+                return await event.eor(f"**{name}:** `{v}` → `{fn(v):g}`")
             except ValueError:
-                return await event.reply("Give a numeric value.")
+                return await event.eor("Give a numeric value.")
         _uhandler.__name__ = f"unit_{name}"
         _uhandler.__doc__ = f"Convert value via {name}."
         return _uhandler
@@ -301,13 +301,13 @@ for _uname, _ufn in _UNITS.items():
 async def units_cmd(event):
     """List unit converters. Usage: `.units`"""
     names = ", ".join(sorted(_UNITS.keys()))
-    return await event.reply(f"**📐 Unit converters:**\n`{names}`")
+    return await event.eor(f"**📐 Unit converters:**\n`{names}`")
 
 
 @command("conv")
 async def conv_cmd(event):
     """Generic quick converter menu. Usage: `.conv`"""
-    return await event.reply(
+    return await event.eor(
         "**🔁 Converters:**\n"
         "`km2miles miles2km m2feet feet2m cm2inch inch2cm`\n"
         "`kg2lb lb2kg g2oz oz2g c2f f2c c2k k2c l2gal gal2l`\n"

@@ -57,10 +57,10 @@ async def _warns(event):
 @command("warn")
 async def warn_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights to warn.")
+        return await event.eor("You need admin rights to warn.")
     target = await resolve_target(event)
     if not target:
-        return await event.reply("Reply to someone or give a user ID.")
+        return await event.eor("Reply to someone or give a user ID.")
     args = event.text.split(maxsplit=2)
     reason = args[2] if len(args) > 2 else "No reason"
 
@@ -72,13 +72,13 @@ async def warn_cmd(event):
     warns = await db_update(f"warns:{cid}", _add, {})
     n = len(warns[str(target)])
     limit = await db_get(f"warnlimit:{cid}", WARN_LIMIT)
-    await event.reply(f"⚠️ **Warned** user {target}\nReason: `{reason}`\nTotal warns: `{n}/{limit}`")
+    await event.eor(f"⚠️ **Warned** user {target}\nReason: `{reason}`\nTotal warns: `{n}/{limit}`")
     if n >= limit:
         try:
             await event.client.kick_participant(event.chat_id, target)
-            await event.reply(f"**User {target} auto-kicked** after {n} warns.")
+            await event.eor(f"**User {target} auto-kicked** after {n} warns.")
         except Exception as e:
-            await event.reply(f"Auto-kick failed: `{e}`")
+            await event.eor(f"Auto-kick failed: `{e}`")
         await db_update(f"warns:{cid}", lambda w: w.pop(str(target), None) or w, {})
 
 
@@ -89,71 +89,71 @@ async def warns_cmd(event):
     warns = await _warns(event)
     list_w = warns.get(str(target), [])
     if not list_w:
-        return await event.reply(f"User {target} has no warns.")
+        return await event.eor(f"User {target} has no warns.")
     limit = await db_get(f"warnlimit:{cid}", WARN_LIMIT)
     text = f"**Warns for {target}** ({len(list_w)}/{limit})\n"
     text += "\n".join(f"{i+1}. {r}" for i, r in enumerate(list_w))
-    await event.reply(text)
+    await event.eor(text)
 
 
 @command("resetwarns")
 async def resetwarns_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     target = await resolve_target(event)
     if not target:
-        return await event.reply("Reply to someone or give a user ID.")
+        return await event.eor("Reply to someone or give a user ID.")
     cid = await chat_id_str(event)
     await db_update(f"warns:{cid}", lambda w: w.pop(str(target), None) or w, {})
-    await event.reply(f"Cleared warns for {target}.")
+    await event.eor(f"Cleared warns for {target}.")
 
 
 @command("setwarnlimit")
 async def setwarnlimit_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     args = event.text.split()
     if len(args) < 2 or not args[1].isdigit():
-        return await event.reply("Usage: `setwarnlimit <number>`")
+        return await event.eor("Usage: `setwarnlimit <number>`")
     cid = await chat_id_str(event)
     await db_set(f"warnlimit:{cid}", int(args[1]))
-    await event.reply(f"Warn limit set to `{args[1]}`.")
+    await event.eor(f"Warn limit set to `{args[1]}`.")
 
 
 # ================================================================= rules
 @command("setrules")
 async def setrules_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     args = event.text.split(maxsplit=1)
     if len(args) < 2:
-        return await event.reply("Give the rules text. Usage: `setrules <text>`")
+        return await event.eor("Give the rules text. Usage: `setrules <text>`")
     await db_set(f"rules:{await chat_id_str(event)}", args[1])
-    await event.reply("✅ Rules saved.")
+    await event.eor("✅ Rules saved.")
 
 
 @command("rules")
 async def rules_cmd(event):
     rules = await db_get(f"rules:{await chat_id_str(event)}")
-    await event.reply(f"**📜 Rules**\n{rules}" if rules else "No rules set. Use `setrules <text>`.")
+    await event.eor(f"**📜 Rules**\n{rules}" if rules else "No rules set. Use `setrules <text>`.")
 
 
 @command("clearrules")
 async def clearrules_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     await db_delete(f"rules:{await chat_id_str(event)}")
-    await event.reply("Rules removed.")
+    await event.eor("Rules removed.")
 
 
 # ================================================================= notes
 @command("savenote")
 async def savenote_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     args = event.text.split(maxsplit=2)
     if len(args) < 3:
-        return await event.reply("Usage: `savenote <name> <content>`")
+        return await event.eor("Usage: `savenote <name> <content>`")
     name, content = args[1].lower(), args[2]
     cid = await chat_id_str(event)
 
@@ -162,29 +162,29 @@ async def savenote_cmd(event):
         return n
 
     await db_update(f"notes:{cid}", _add, {})
-    await event.reply(f"Note **#{name}** saved. Use `#{name}` to view.")
+    await event.eor(f"Note **#{name}** saved. Use `#{name}` to view.")
 
 
 @command("delnote")
 async def delnote_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     args = event.text.split()
     if len(args) < 2:
-        return await event.reply("Usage: `delnote <name>`")
+        return await event.eor("Usage: `delnote <name>`")
     cid = await chat_id_str(event)
     name = args[1].lower()
     await db_update(f"notes:{cid}", lambda n: n.pop(name, None) or n, {})
-    await event.reply(f"Note #{name} deleted.")
+    await event.eor(f"Note #{name} deleted.")
 
 
 @command("notes")
 async def notes_cmd(event):
     notes = await db_get(f"notes:{await chat_id_str(event)}", {})
     if not notes:
-        return await event.reply("No notes here. Use `savenote`.")
+        return await event.eor("No notes here. Use `savenote`.")
     text = "**Saved notes:**\n" + "\n".join(f"#{k}" for k in notes)
-    await event.reply(text)
+    await event.eor(text)
 
 
 @bot.on(events.NewMessage(pattern=r"^#(\w+)", outgoing=True))
@@ -192,17 +192,17 @@ async def note_trigger(event):
     name = event.pattern_match.group(1).lower()
     notes = await db_get(f"notes:{str(event.chat_id)}", {})
     if name in notes:
-        await event.reply(notes[name])
+        await event.eor(notes[name])
 
 
 # ================================================================= filters
 @command("addfilter")
 async def addfilter_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     args = event.text.split(maxsplit=2)
     if len(args) < 3:
-        return await event.reply("Usage: `addfilter <trigger> <reply>`")
+        return await event.eor("Usage: `addfilter <trigger> <reply>`")
     trigger, content = args[1].lower(), args[2]
     cid = await chat_id_str(event)
 
@@ -211,28 +211,28 @@ async def addfilter_cmd(event):
         return f
 
     await db_update(f"filters:{cid}", _add, {})
-    await event.reply(f"Filter saved: `{trigger}` → `{content[:30]}`")
+    await event.eor(f"Filter saved: `{trigger}` → `{content[:30]}`")
 
 
 @command("delfilter")
 async def delfilter_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     args = event.text.split()
     if len(args) < 2:
-        return await event.reply("Usage: `delfilter <trigger>`")
+        return await event.eor("Usage: `delfilter <trigger>`")
     cid = await chat_id_str(event)
     await db_update(f"filters:{cid}", lambda f: f.pop(args[1].lower(), None) or f, {})
-    await event.reply("Filter removed.")
+    await event.eor("Filter removed.")
 
 
 @command("filters")
 async def filters_cmd(event):
     filters = await db_get(f"filters:{await chat_id_str(event)}", {})
     if not filters:
-        return await event.reply("No filters here.")
+        return await event.eor("No filters here.")
     text = "**Filters:**\n" + "\n".join(f"`{k}` → `{v[:25]}`" for k, v in filters.items())
-    await event.reply(text)
+    await event.eor(text)
 
 
 @bot.on(events.NewMessage(outgoing=False))
@@ -244,7 +244,7 @@ async def filter_trigger(event):
     filters = await db_get(f"filters:{str(event.chat_id)}", {})
     for trigger, content in filters.items():
         if trigger in (event.text or "").lower():
-            await event.reply(content)
+            await event.eor(content)
             return
 
 
@@ -252,10 +252,10 @@ async def filter_trigger(event):
 @command("addbl")
 async def addbl_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     args = event.text.split(maxsplit=2)
     if len(args) < 3:
-        return await event.reply("Usage: `addbl <word> <reason>`")
+        return await event.eor("Usage: `addbl <word> <reason>`")
     word, reason = args[1].lower(), args[2]
     cid = await chat_id_str(event)
 
@@ -264,28 +264,28 @@ async def addbl_cmd(event):
         return b
 
     await db_update(f"blacklist:{cid}", _add, {})
-    await event.reply(f"Blacklisted `{word}` (reason: {reason})")
+    await event.eor(f"Blacklisted `{word}` (reason: {reason})")
 
 
 @command("delbl")
 async def delbl_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     args = event.text.split()
     if len(args) < 2:
-        return await event.reply("Usage: `delbl <word>`")
+        return await event.eor("Usage: `delbl <word>`")
     cid = await chat_id_str(event)
     await db_update(f"blacklist:{cid}", lambda b: b.pop(args[1].lower(), None) or b, {})
-    await event.reply("Removed from blacklist.")
+    await event.eor("Removed from blacklist.")
 
 
 @command("blist")
 async def blist_cmd(event):
     bl = await db_get(f"blacklist:{await chat_id_str(event)}", {})
     if not bl:
-        return await event.reply("No blacklisted words.")
+        return await event.eor("No blacklisted words.")
     text = "**Blacklist:**\n" + "\n".join(f"`{w}` — {r}" for w, r in bl.items())
-    await event.reply(text)
+    await event.eor(text)
 
 
 @bot.on(events.NewMessage(outgoing=False))
@@ -305,7 +305,7 @@ async def blacklist_trigger(event):
             me = await event.client.get_me()
             can = await event.client.get_permissions(event.chat_id, me.id)
             if can.is_admin:
-                await event.reply(f"**Message removed** — blacklisted word `{word}`.")
+                await event.eor(f"**Message removed** — blacklisted word `{word}`.")
             return
 
 
@@ -313,10 +313,10 @@ async def blacklist_trigger(event):
 @command("gban")
 async def gban_cmd(event):
     if not await owner_check(event):
-        return await event.reply("Owner only.")
+        return await event.eor("Owner only.")
     target = await resolve_target(event)
     if not target:
-        return await event.reply("Reply to someone or give a user ID.")
+        return await event.eor("Reply to someone or give a user ID.")
     args = event.text.split(maxsplit=2)
     reason = args[2] if len(args) > 2 else "No reason"
 
@@ -325,27 +325,27 @@ async def gban_cmd(event):
         return g
 
     await db_update("gbans", _add, {})
-    await event.reply(f"🌐 **User {target} globally banned.** Reason: `{reason}`")
+    await event.eor(f"🌐 **User {target} globally banned.** Reason: `{reason}`")
 
 
 @command("ungban")
 async def ungban_cmd(event):
     if not await owner_check(event):
-        return await event.reply("Owner only.")
+        return await event.eor("Owner only.")
     target = await resolve_target(event)
     if not target:
-        return await event.reply("Reply to someone or give a user ID.")
+        return await event.eor("Reply to someone or give a user ID.")
     await db_update("gbans", lambda g: g.pop(str(target), None) or g, {})
-    await event.reply(f"Removed user {target} from global bans.")
+    await event.eor(f"Removed user {target} from global bans.")
 
 
 @command("gbanlist")
 async def gbanlist_cmd(event):
     gbans = await db_get("gbans", {})
     if not gbans:
-        return await event.reply("Global ban list is empty.")
+        return await event.eor("Global ban list is empty.")
     text = "**🌐 Global bans**\n" + "\n".join(f"{u} — {r}" for u, r in gbans.items())
-    await event.reply(text)
+    await event.eor(text)
 
 
 @bot.on(events.ChatAction)
@@ -360,7 +360,7 @@ async def gban_joiner(event):
         return
     try:
         await event.client.kick_participant(event.chat_id, uid)
-        await event.reply(f"**Kicked: user {uid} is globally banned.**")
+        await event.eor(f"**Kicked: user {uid} is globally banned.**")
     except Exception:
         pass
 
@@ -369,12 +369,12 @@ async def gban_joiner(event):
 @command("captcha")
 async def captcha_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     args = event.text.split()
     if len(args) < 2 or args[1].lower() not in ("on", "off"):
-        return await event.reply("Usage: `captcha on|off`")
+        return await event.eor("Usage: `captcha on|off`")
     await db_set(f"captcha:{await chat_id_str(event)}", args[1].lower() == "on")
-    await event.reply(f"🛡 Captcha verification **{args[1].upper()}**.")
+    await event.eor(f"🛡 Captcha verification **{args[1].upper()}**.")
 
 
 @bot.on(events.ChatAction)
@@ -389,7 +389,7 @@ async def captcha_joiner(event):
     code = "".join(random.choices(string.ascii_uppercase + string.digits, k=3))
     try:
         await event.client.edit_permissions(event.chat_id, uid, send_messages=False)
-        msg = await event.reply(
+        msg = await event.eor(
             f"⛔ **Please verify you're human!**\nSend `!verify {code}` here to join.\n"
             f"Miss the code? You will remain muted until verified."
         )
@@ -418,30 +418,30 @@ async def captcha_verify(event):
         return
     parts = event.text.split()
     if len(parts) < 2:
-        return await event.reply("Usage: `!verify <code>`")
+        return await event.eor("Usage: `!verify <code>`")
     stored = await db_get(f"captchacode:{event.chat_id}:{event.sender_id}")
     if stored and parts[1].upper() == stored:
         await event.client.edit_permissions(event.chat_id, event.sender_id, send_messages=True)
         await db_delete(f"captchacode:{event.chat_id}:{event.sender_id}")
         await event.delete()
-        await event.reply("✅ Verified! Welcome.")
+        await event.eor("✅ Verified! Welcome.")
 
 
 # ================================================================= extra locks (links / forwards)
 @command("locklinks")
 async def locklinks_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     await db_set(f"locklinks:{await chat_id_str(event)}", True)
-    await event.reply("🔒 Link posting locked (messages with links will be removed).")
+    await event.eor("🔒 Link posting locked (messages with links will be removed).")
 
 
 @command("unlocklinks")
 async def unlocklinks_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     await db_set(f"locklinks:{await chat_id_str(event)}", False)
-    await event.reply("🔓 Links allowed again.")
+    await event.eor("🔓 Links allowed again.")
 
 
 @bot.on(events.NewMessage(outgoing=False))
@@ -456,7 +456,7 @@ async def linklock_trigger(event):
         if can.is_admin and any(t in (event.text or "") for t in (".com", ".net", ".org", "http:", "https:", "t.me/")):
             try:
                 await event.delete()
-                await event.reply("🔒 **Links are locked** in this chat.")
+                await event.eor("🔒 **Links are locked** in this chat.")
             except Exception:
                 pass
 
@@ -469,10 +469,10 @@ async def admins_cmd(event):
         async for part in event.client.iter_participants(event.chat_id, filter=types.ChannelParticipantsAdmins):
             out.append(f"• `{part.id}` — {part.first_name or ''}")
     except Exception as e:
-        return await event.reply(f"Error: `{e}`")
+        return await event.eor(f"Error: `{e}`")
     if not out:
-        return await event.reply("No admins found.")
-    await event.reply("**👑 Admins here:**\n" + "\n".join(out[:50]))
+        return await event.eor("No admins found.")
+    await event.eor("**👑 Admins here:**\n" + "\n".join(out[:50]))
 
 
 @command("report")
@@ -483,14 +483,14 @@ async def report_cmd(event):
             continue
         admins.append(f"@{part.username}" if getattr(part, "username", None) else f"[{part.first_name or 'admin'}](tg://user?id={part.id})")
     if not admins:
-        return await event.reply("No admin to notify.")
-    await event.reply("**🚨 Report!** " + " ".join(admins))
+        return await event.eor("No admin to notify.")
+    await event.eor("**🚨 Report!** " + " ".join(admins))
 
 
 @command("clean")
 async def clean_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     args = event.text.split()
     n = int(args[1]) if len(args) > 1 and args[1].isdigit() else 20
     deleted = 0
@@ -500,59 +500,59 @@ async def clean_cmd(event):
             deleted += 1
             if deleted >= n:
                 break
-    await event.reply(f"🧹 Cleaned `{deleted}` service/recent messages.")
+    await event.eor(f"🧹 Cleaned `{deleted}` service/recent messages.")
 
 
 @command("setgtitle")
 async def setgtitle_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     args = event.text.split(maxsplit=1)
     if len(args) < 2:
-        return await event.reply("Usage: `setgtitle <title>`")
+        return await event.eor("Usage: `setgtitle <title>`")
     try:
         await event.client(fn.messages.EditChatTitleRequest(event.chat_id, args[1]))
-        await event.reply("✅ Title updated.")
+        await event.eor("✅ Title updated.")
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 @command("setgabout")
 async def setgabout_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     args = event.text.split(maxsplit=1)
     if len(args) < 2:
-        return await event.reply("Usage: `setgabout <text>`")
+        return await event.eor("Usage: `setgabout <text>`")
     try:
         await event.client(fn.messages.EditChatAboutRequest(event.chat_id, args[1]))
-        await event.reply("✅ Description updated.")
+        await event.eor("✅ Description updated.")
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 @command("setgphoto")
 async def setgphoto_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     rep = await event.get_reply_message() if event.reply_to else None
     if not rep or not rep.photo:
-        return await event.reply("Reply to a photo to set it as the group photo.")
+        return await event.eor("Reply to a photo to set it as the group photo.")
     try:
         import tempfile
         tmp = tempfile.mkdtemp(prefix="xeno_pfp_")
         path = await rep.download_media(file=tmp)
         await event.client(fn.messages.EditChatPhotoRequest(event.chat_id, path))
         shutil.rmtree(tmp, ignore_errors=True)
-        await event.reply("✅ Group photo updated.")
+        await event.eor("✅ Group photo updated.")
     except Exception as e:
-        await event.reply(f"Error: `{e}`")
+        await event.eor(f"Error: `{e}`")
 
 
 @command("kickbots")
 async def kickbots_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     count = 0
     async for part in event.client.iter_participants(event.chat_id):
         if getattr(part, "bot", False) and not (await event.client.get_permissions(event.chat_id, part.id)).is_admin:
@@ -561,24 +561,24 @@ async def kickbots_cmd(event):
                 count += 1
             except Exception:
                 pass
-    await event.reply(f"🤖 Kicked `{count}` bots (non-admin).")
+    await event.eor(f"🤖 Kicked `{count}` bots (non-admin).")
 
 
 @command("floodwindow")
 async def floodwindow_cmd(event):
     if not await is_admin(event):
-        return await event.reply("You need admin rights.")
+        return await event.eor("You need admin rights.")
     args = event.text.split()
     if len(args) < 3 or not args[1].isdigit() or not args[2].isdigit():
-        return await event.reply("Usage: `floodwindow <threshold> <seconds>`")
+        return await event.eor("Usage: `floodwindow <threshold> <seconds>`")
     threshold, window = int(args[1]), int(args[2])
     if threshold < 2 or window < 2 or threshold > 50 or window > 300:
-        return await event.reply("Threshold 2-50, window 2-300 seconds.")
+        return await event.eor("Threshold 2-50, window 2-300 seconds.")
     cid = await chat_id_str(event)
     await db_set(f"flood:{cid}", [threshold, window])
-    await event.reply(f"Anti-flood window set: {threshold} msgs / {window}s.")
+    await event.eor(f"Anti-flood window set: {threshold} msgs / {window}s.")
     if not await ambient_enabled("antispam", event.chat_id):
-        await event.reply("ℹ️ Anti-spam is currently **off** — `.ambient antispam on` to activate.")
+        await event.eor("ℹ️ Anti-spam is currently **off** — `.ambient antispam on` to activate.")
 
 
 @command("ambient")
@@ -593,7 +593,7 @@ async def ambient_cmd(event):
     from core.auth import AMBIENT_FEATURES, is_owner
 
     if not await is_owner(event):
-        return await event.reply("🔒 Owner only.")
+        return await event.eor("🔒 Owner only.")
 
     args = event.text.split()
     if len(args) == 1:
@@ -605,7 +605,7 @@ async def ambient_cmd(event):
             here = await _get(f"ambient:chat:{feat}:{event.chat_id}", True)
             mark = "🟢 on" if on and here else "⚪️ off"
             lines.append(f"{mark} — `{feat}` _({AMBIENT_FEATURES[feat]})_")
-        return await event.reply(
+        return await event.eor(
             "**🧯 Ambient handlers** — these act on other people's messages.\n"
             + "\n".join(lines)
             + "\n\nAll are **off by default**."
@@ -613,11 +613,11 @@ async def ambient_cmd(event):
 
     feat = args[1].lower()
     if feat not in AMBIENT_FEATURES:
-        return await event.reply(f"Unknown feature. Pick one: `{'`, `'.join(AMBIENT_FEATURES)}`")
+        return await event.eor(f"Unknown feature. Pick one: `{'`, `'.join(AMBIENT_FEATURES)}`")
     if len(args) < 3 or args[2].lower() not in ("on", "off"):
-        return await event.reply("Usage: `.ambient <feature> on|off [here]`")
+        return await event.eor("Usage: `.ambient <feature> on|off [here]`")
     on = args[2].lower() == "on"
     here = len(args) > 3 and args[3].lower() == "here"
     await set_ambient(feat, on, event.chat_id if here else None)
     scope = "this chat" if here else "everywhere"
-    return await event.reply(f"🧯 `{feat}` turned **{'on' if on else 'off'}** ({scope}).")
+    return await event.eor(f"🧯 `{feat}` turned **{'on' if on else 'off'}** ({scope}).")

@@ -85,6 +85,13 @@ async def set_cmd(event):
     await event.eor(sage.done(f"{key}={val}"))
 
 
+async def _current(key):
+    """Current value of a panel key. THEME lives under a different db key."""
+    if key == "THEME":
+        return await db_get("theme:current", sage.DEFAULT_THEME)
+    return await db_get(key, getattr(config, key, config.get(key, "")))
+
+
 @command("get")
 async def get_cmd(event):
     """Read one config key. Usage: `.get THEME`"""
@@ -94,8 +101,7 @@ async def get_cmd(event):
     key = parts[1].strip().upper()
     if key not in PANEL_KEYS:
         return await event.eor(sage.err(f"config key `{key}`"))
-    cur = await db_get(key, getattr(config, key, config.get(key, "")))
-    await event.eor(f"`{key}` = `{cur}`")
+    await event.eor(f"`{key}` = `{await _current(key)}`")
 
 
 @command("config")
@@ -103,7 +109,7 @@ async def config_cmd(event):
     """List config keys and current values. Usage: `.config`"""
     lines = ["**Configurable keys**", ""]
     for k, desc in PANEL_KEYS.items():
-        cur = await db_get(k, getattr(config, k, config.get(k, "")))
+        cur = await _current(k)
         lines.append(f"`{k}` — {desc}\n   now: `{cur}`")
     await event.eor("\n".join(lines))
 

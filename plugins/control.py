@@ -152,12 +152,19 @@ async def status_cmd(event):
     await event.reply("\n".join(lines))
 
 
+async def _current(key):
+    """Current value of a panel key. THEME lives under a different db key."""
+    if key == "THEME":
+        return await db_get("theme:current", sage.DEFAULT_THEME)
+    return await db_get(key, getattr(config, key, config.get(key, "")))
+
+
 @asst_cmd("config")
 async def config_cmd(event):
     """List the settings you can change from the panel."""
     lines = ["**Configurable keys**", ""]
     for k, desc in PANEL_KEYS.items():
-        cur = await db_get(k, getattr(config, k, config.get(k, "")))
+        cur = await _current(k)
         lines.append(f"`{k}` — {desc}\n   now: `{cur}`")
     await event.reply("\n".join(lines))
 
@@ -168,8 +175,7 @@ async def get_cmd(event):
     key = event.pattern_match.group(1).upper()
     if key not in PANEL_KEYS:
         return await event.reply(f"`{key}` isn't a panel key. Use `{PANEL_PREFIX}config`.")
-    cur = await db_get(key, getattr(config, key, config.get(key, "")))
-    await event.reply(f"`{key}` = `{cur}`")
+    await event.reply(f"`{key}` = `{await _current(key)}`")
 
 
 @asst_cmd(r"set\s+(\w+)\s+(.+)", private_only=True)

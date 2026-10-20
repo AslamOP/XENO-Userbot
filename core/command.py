@@ -50,7 +50,7 @@ def command(pattern, client="user", **kwargs):
         else:
             for prefix in config.PREFIXES:
                 full = rf"^{re.escape(prefix)}{pattern}{_tail(pattern)}"
-                bot.add_event_handler(
+                target.add_event_handler(
                     func,
                     events.NewMessage(pattern=full, outgoing=True, **kwargs),
                 )

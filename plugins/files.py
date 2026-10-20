@@ -89,12 +89,18 @@ def resolve(name):
 def unique_path(name):
     """A free path in the store, appending (1), (2)… if the name is taken."""
     ensure_store()
+    # Validate name
+    if filename_error(name) is not None:
+        name = "upload.bin"
     base, ext = os.path.splitext(name)
     candidate = os.path.join(STORE, name)
     n = 1
-    while os.path.exists(candidate):
+    while os.path.lexists(candidate):
         candidate = os.path.join(STORE, f"{base} ({n}){ext}")
         n += 1
+        if n > 1000:
+            candidate = os.path.join(STORE, f"{base}_{os.urandom(4).hex()}{ext}")
+            break
     return candidate
 
 

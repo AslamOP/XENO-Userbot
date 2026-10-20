@@ -11,6 +11,7 @@ failure here is non-fatal: if bot creation fails, XENO still boots as a
 userbot and logs why.
 """
 import asyncio
+import os
 import random
 import time
 
@@ -212,21 +213,50 @@ async def _persist_token(token):
 
     await db_set("ASSISTANT_TOKEN", token)
     try:
-        with open(".env", encoding="utf-8") as f:
-            existing = f.read()
+        env_path = ".env"
+        try:
+            with open(env_path, encoding="utf-8") as f:
+                existing = f.read()
+        except FileNotFoundError:
+            existing = ""
         if "BOT_TOKEN=" in existing:
             lines = [
                 f"BOT_TOKEN={token}" if ln.strip().startswith("BOT_TOKEN=") else ln
                 for ln in existing.splitlines()
             ]
-            with open(".env", "w", encoding="utf-8") as f:
-                f.write("\n".join(lines) + "\n")
+            new_content = "\n".join(lines)
+            if new_content and not new_content.endswith("\n"):
+                new_content += "\n"
+            tmp_path = env_path + ".tmp"
+            try:
+                with open(tmp_path, "w", encoding="utf-8") as f:
+                    f.write(new_content)
+                os.replace(tmp_path, env_path)
+            finally:
+                try:
+                    os.unlink(tmp_path)
+                except Exception:
+                    pass
         else:
-            with open(".env", "a", encoding="utf-8") as f:
-                f.write(
-                    f"\n# auto-created by XENO {time.strftime('%Y-%m-%d %H:%M:%S')}\n"
-                    f"BOT_TOKEN={token}\n"
-                )
+            tmp_path = env_path + ".tmp"
+            try:
+                with open(tmp_path, "a", encoding="utf-8") as f:
+                    if existing and not existing.endswith("\n"):
+                        f.write("\n")
+                    if existing:
+                        f.write(existing)
+                        if not existing.endswith("\n"):
+                            f.write("\n")
+                    f.write(
+                        f"# auto-created by XENO {time.strftime('%Y-%m-%d %H:%M:%S')}\n"
+                        f"BOT_TOKEN={token}\n"
+                    )
+                os.replace(tmp_path, env_path)
+            finally:
+                try:
+                    os.unlink(tmp_path)
+                except Exception:
+                    pass
     except OSError as e:
         log.info(f"Token stored in the db (couldn't write .env: {e})")
 

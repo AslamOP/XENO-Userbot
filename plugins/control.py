@@ -13,21 +13,9 @@ from core.auth import AMBIENT_FEATURES, ambient_enabled, set_ambient
 from core.command import asst_callback, asst_cmd
 from core.db import get as db_get
 from core.db import set_ as db_set
+from core.panelcfg import PANEL_KEYS, apply_key
+from core.panelcfg import current as _current
 from core.plugin_loader import PLUGINS_DIR
-
-# Keys safe to read/write from the panel.
-PANEL_KEYS = {
-    "PREFIXES": "Command prefixes for the userbot client",
-    "AI_MODEL": "Model used by .ai / game agent",
-    "AI_AUTO_REPLY": "Auto-reply to inbound DMs (true/false)",
-    "AI_ALLOWED_IDS": "Allowlist for auto-reply, blank = anyone",
-    "BOT_NAME": "Name the persona speaks as",
-    "PERSONA": "System prompt for the AI",
-    "THEME": "Reply accent (see core/sage.py THEMES)",
-}
-# OWNER_ID is deliberately NOT here. Writing it from the panel has no way back:
-# a typo locks you out of the panel AND every owner-gated command, and the bad
-# value persists. Change it in .env.
 
 # Deliberately absent: any eval/exec/execjs, anything touching secrets, anything
 # that sends to arbitrary chats.
@@ -152,20 +140,12 @@ async def status_cmd(event):
     await event.reply("\n".join(lines))
 
 
-async def _current(key):
-    """Current value of a panel key. THEME lives under a different db key."""
-    if key == "THEME":
-        return await db_get("theme:current", sage.DEFAULT_THEME)
-    return await db_get(key, getattr(config, key, config.get(key, "")))
-
-
 @asst_cmd("config")
 async def config_cmd(event):
     """List the settings you can change from the panel."""
     lines = ["**Configurable keys**", ""]
     for k, desc in PANEL_KEYS.items():
-        cur = await _current(k)
-        lines.append(f"`{k}` — {desc}\n   now: `{cur}`")
+        lines.append(f"`{k}` — {desc}\n   now: `{await _current(k)}`")
     await event.reply("\n".join(lines))
 
 
@@ -187,39 +167,16 @@ async def set_cmd(event):
         return await event.reply(
             f"`{key}` isn't a panel key. Use `{PANEL_PREFIX}config` for the list."
         )
-    if key == "PREFIXES":
-        parts = [p for p in val.split() if p]
-        if not parts or any(len(p) != 1 for p in parts):
-            return await event.reply("Prefixes must be single characters, space separated: `. ! ,`")
-        val = ",".join(parts)
-    if key == "AI_AUTO_REPLY":
-        val = str(val).lower() in ("1", "true", "yes", "on")
-    if key in ("AI_MODEL", "BOT_NAME", "PERSONA", "THEME", "AI_ALLOWED_IDS"):
-        # Live-apply the ones that are read at runtime.
-        if key == "AI_MODEL":
-            config.AI_MODEL = val
-        elif key == "BOT_NAME":
-            config.BOT_NAME = val
-        elif key == "PERSONA":
-            config.PERSONA = val
-        elif key == "AI_ALLOWED_IDS":
-            config.AI_ALLOWED_IDS = val
-        elif key == "THEME":
-            v = val.lower().strip()
-            if v not in sage.THEMES:
-                names = ", ".join(sage.THEMES.keys())
-                return await event.reply(f"Invalid theme. Valid: {names}")
-            await db_set("theme:current", v)
-            sage.set_theme(v)
-            return await event.reply(f"✅ `{key}` = `{v}`")
-    if key == "PREFIXES":
-        await db_set(key, val)
-        return await event.reply(
-            f"✅ `{key}` saved as `{val}`.\n"
-            f"⚠️ Takes effect after a restart — the live handlers are still bound "
-            f"to `{' '.join(config.PREFIXES)}`."
-        )
+    ok, msg, val = await apply_key(key, val)
+    if not ok:
+        return await event.reply(f"❌ {msg}")
     await db_set(key, val)
+    if key == "PREFIXES":
+        return await event.reply(
+            f"✅ `{key}` = `{val}`.\n"
+            "⚠️ Takes effect after a restart — Telethon binds command handlers "
+            "to the prefix at load time."
+        )
     await event.reply(f"✅ `{key}` = `{val}`")
 
 

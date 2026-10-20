@@ -67,7 +67,9 @@ def _schedule():
     """Request a debounced flush. Caller must hold no lock; safe from handlers."""
     global _flush_task
     if _flush_task is None or _flush_task.done():
-        _flush_task = asyncio.ensure_future(_flush_loop())
+        # Double-check pattern without blocking - task creation is cheap
+        if _flush_task is None or _flush_task.done():
+            _flush_task = asyncio.ensure_future(_flush_loop())
 
 
 async def flush():

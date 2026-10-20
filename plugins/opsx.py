@@ -205,7 +205,7 @@ async def spamx_cmd(event):
         try:
             await event.client.send_message(event.chat_id, msg)
             sent += 1
-            await time.sleep(1.0)
+            await asyncio.sleep(1.0)
         except FloodWaitError as e:
             await event.eor(f"🛑 Flood wait: `{e.seconds}s`. Stopped after {sent}.")
             return

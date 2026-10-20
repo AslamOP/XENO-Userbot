@@ -38,6 +38,7 @@ _flush_task = None
 async def _scores_flush_loop():
     """Coalesce writes: the old code rewrote the file inside the event loop on
     every single point scored."""
+    global _dirty
     while True:
         await asyncio.sleep(3)
         if not _dirty:

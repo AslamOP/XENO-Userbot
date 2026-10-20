@@ -41,6 +41,12 @@ async def main():
 
     await sage.load_theme()
 
+    # Overlay db-persisted config (.set values) onto the config module before
+    # plugins import, so runtime reads see the saved values, not .env defaults.
+    from core import panelcfg
+
+    await panelcfg.apply_persisted()
+
     # Temporary plugins are session-only by design: wipe any left over from the
     # previous run before anything imports them.
     from core import custom as custom_mod

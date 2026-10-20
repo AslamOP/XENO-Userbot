@@ -6,7 +6,7 @@ import tempfile
 import aiohttp
 
 from core.command import command
-from core.http import post_form
+from core.http import get_json, post_form
 
 
 async def create_telegraph(title, content):

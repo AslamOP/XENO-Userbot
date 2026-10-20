@@ -54,24 +54,31 @@ bot = TelegramClient(
 async def _qr_login(quiet=False):
     """Headless QR login: renders the code to the log + keeps refreshing until scanned."""
     await bot.connect()
-    if (config.SESSION and config.SESSION.startswith("1")) or not config.SESSION:
+    # If no saved session or session appears invalid, do QR login
+    if not config.SESSION:
         qr = await bot.qr_login()
         log.info("=== XENO QR LOGIN ===")
         log.info("Scan with the OWNER account: Telegram > Settings > Devices > Link a Desktop Device")
         while True:
-            msg = None
             if not quiet:
-                q = qrcode.QRCode(border=1)
-                q.add_data(qr.url)
-                q.make(fit=True)
-                q.print_ascii(invert=True)
-                q.make_image().save(config.SESSION_FILE if hasattr(config, "SESSION_FILE") else "/tmp/xeno_qr.png")
+                try:
+                    q = qrcode.QRCode(border=1)
+                    q.add_data(qr.url)
+                    q.make(fit=True)
+                    q.print_ascii(invert=True)
+                    out_path = getattr(config, "SESSION_FILE", "/tmp/xeno_qr.png")
+                    q.make_image().save(out_path)
+                except Exception:
+                    pass
             try:
                 if await qr.wait(timeout=30):
                     break
-                img = qrcode.make(qr.url)
-                img.save("/tmp/xeno_qr.png")
-                log.info("QR refreshed -> /tmp/xeno_qr.png")
+                try:
+                    img = qrcode.make(qr.url)
+                    img.save("/tmp/xeno_qr.png")
+                    log.info("QR refreshed -> /tmp/xeno_qr.png")
+                except Exception:
+                    pass
             except Exception:
                 continue
     else:

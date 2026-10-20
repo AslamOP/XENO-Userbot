@@ -51,13 +51,14 @@ async def main():
 
     log.info(f"Starting userbot as {me.username or me.id}… Run `Ctrl+C` to stop.")
     try:
-        # Only the main client needs run_until_disconnected(). The assistant's
-        # update loop is already running as a background task from .start() —
-        # calling run_until_disconnected() on both clients in an asyncio.gather()
-        # starves the assistant's update dispatch, so it never sees incoming DMs.
+        # Ultroid's pattern: only the assistant blocks. Both clients share the
+        # same asyncio event loop, so the main bot's handlers fire on it too.
+        # Calling run_until_disconnected() on both (or on the wrong one) starves
+        # the assistant's update dispatch — it connects fine but never sees DMs.
         if assistant_mod.asst:
-            log.info("Assistant update loop running in background.")
-        await bot.run_until_disconnected()
+            await assistant_mod.asst.run_until_disconnected()
+        else:
+            await bot.run_until_disconnected()
     finally:
         # Writes are debounced; make sure nothing is lost on exit.
         await db_flush()

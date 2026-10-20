@@ -282,12 +282,6 @@ async def ready(assistant_client, log_channel=None, user_client=None):
     """
     if not log_channel:
         return
-    if assistant_client and assistant_client.is_connected():
-        sender = assistant_client
-    else:
-        sender = user_client
-    if not sender:
-        return
     me = await user_client.get_me() if user_client else None
     who = f"@{me.username}" if me and me.username else (me.first_name if me else "unknown")
     asst_me = await assistant_client.get_me() if assistant_client else None
@@ -308,11 +302,21 @@ async def ready(assistant_client, log_channel=None, user_client=None):
     import os
 
     photo = _BANNER_PATH if os.path.exists(_BANNER_PATH) else None
-    try:
-        await sender.send_message(log_channel, msg, file=photo)
-        log.info("Startup banner sent to log channel.")
-    except Exception as e:
-        log.warning(f"Startup banner failed ({type(e).__name__}: {e})")
+    # Bots can't start conversations with groups they aren't in — same
+    # failure Ultroid's ready() catches, and it retries with the user client.
+    for fallback in (assistant_client, user_client):
+        if not fallback or not fallback.is_connected():
+            continue
+        try:
+            await fallback.send_message(log_channel, msg, file=photo)
+            log.info("Startup banner sent to log channel.")
+            return
+        except Exception as e:
+            log.warning(
+                f"Startup banner via {fallback.__class__.__name__} failed "
+                f"({type(e).__name__}: {e})"
+            )
+    log.warning("Startup banner could not be delivered to log channel.")
 
 
 async def start_assistant(user_client, log_channel=None):

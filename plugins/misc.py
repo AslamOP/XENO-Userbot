@@ -5,11 +5,12 @@ import re
 import time
 import platform
 import asyncio
-from telethon import functions
 
 import config
+from core import sage
 from core.bot import bot
 from core.command import command
+from core.db import get as db_get
 
 PLUGINS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "plugins")
 
@@ -163,7 +164,7 @@ async def help_cmd(event):
     a = event.text.split(maxsplit=1)
     target = (a[1].strip() if len(a) > 1 else "").strip(".")
     if not target:
-        return await event.reply(_fmt_index(modules))
+        return await event.eor(_fmt_index(modules))
     # Allow searching by command name across all modules
     if target not in modules:
         hits = [
@@ -175,11 +176,11 @@ async def help_cmd(event):
             # Was: `_, d = next(c for c, _ in ...)` — that unpacks the command
             # NAME (a str) into two vars and raised on every `.help <command>`.
             name, desc = next(c for c in modules[mod]["cmds"] if c[0] == target)
-            return await event.reply(
+            return await event.eor(
                 f"🔍 **`{target}`** — in module `{mod}`\n"
                 + (f"{desc}\n" if desc else "")
                 + f"\nTry `.help {mod}` for the full module.")
-        return await event.reply(_fmt_index(modules) + f"\n\n⚠️ No module or command named `{target}`.")
+        return await event.eor(_fmt_index(modules) + f"\n\n⚠️ No module or command named `{target}`.")
     info = modules[target]
     icon = MODULE_ICONS.get(target, "▫")
     rule = "━" * 30
@@ -193,7 +194,7 @@ async def help_cmd(event):
     for cname, d in info["cmds"]:
         lines.append(f"`{cname}`" + (f" — {d}" if d else ""))
     body = "\n".join(lines)
-    return await event.reply(
+    return await event.eor(
         f"{header}\n\n{body}\n\n📌 Prefixes: `.name` `!name` `#name`")
 
 
@@ -201,10 +202,10 @@ async def help_cmd(event):
 async def ping_cmd(event):
     """Check bot latency / responsiveness."""
     start = time.monotonic()
-    msg = await event.reply("Pinging...")
+    msg = await event.eor("Pinging...")
     elapsed = (time.monotonic() - start) * 1000
     verdict = "within acceptable parameters." if elapsed < 250 else "marginal. recalibrating route."
-    await msg.edit(f"Latency: `{elapsed:.1f}ms` — {verdict}")
+    await msg.edit(f"{sage.accent_now()}Latency: `{elapsed:.1f}ms` — {verdict}")
 
 
 @command("alive")
@@ -214,14 +215,20 @@ async def alive_cmd(event):
     m, s = divmod(uptime, 60)
     h, m = divmod(m, 60)
     d, h = divmod(h, 24)
-
+    accent = sage.accent_now()
+    theme = await db_get("theme:current", "neon")
     text = (
-        f"**XENO operational.** All processes nominal.\n"
-        f"Uptime: `{d}d {h}h {m}m {s}s`\n"
-        f"Runtime: `Python {platform.python_version()}`\n"
-        f"Prefixes: `{' '.join(config.PREFIXES)}`"
+        f"{accent}**XENO operational.** All processes nominal.\n"
+        f"{accent}Uptime: `{d}d {h}h {m}m {s}s`\n"
+        f"{accent}Runtime: `Python {platform.python_version()}`\n"
+        f"{accent}Theme: `{theme}`\n"
+        f"{accent}Prefixes: `{' '.join(config.PREFIXES)}`"
     )
-    await event.reply(text)
+    pic = await db_get("alive:pic", None)
+    if pic:
+        await event.eor(text, file=pic)
+    else:
+        await event.eor(text)
 
 
 @command("info")
@@ -235,13 +242,13 @@ async def info_cmd(event):
         f"Username: @{user.username or 'none'}\n"
         f"Premium: `{user.premium or False}`"
     )
-    await event.reply(text)
+    await event.eor(text)
 
 
 @command("myid")
 async def myid_cmd(event):
     """Your user ID and this chat's ID."""
-    await event.reply(f"Your ID: `{event.sender_id}`\nChat ID: `{event.chat_id}`")
+    await event.eor(f"Your ID: `{event.sender_id}`\nChat ID: `{event.chat_id}`")
 
 
 HACK_PHASES = [
@@ -270,8 +277,8 @@ async def hack_cmd(event):
         if reply:
             target = " ".join((reply.sender.first_name or "user").split())
         else:
-            return await event.reply("Usage: `.hack <username>` (or reply to someone)")
-    msg = await event.reply(HACK_PHASES[0].format(target=target))
+            return await event.eor("Usage: `.hack <username>` (or reply to someone)")
+    msg = await event.eor(HACK_PHASES[0].format(target=target))
     for phase in HACK_PHASES[1:]:
         await asyncio.sleep(1.2)
         try:

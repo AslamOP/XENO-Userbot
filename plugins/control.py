@@ -1,11 +1,4 @@
-"""XENO control panel — commands reachable by DMing the assistant bot.
-
-Owner-only by default (`asst_cmd(..., owner=True)`), private-only for anything
-that touches the host, and deliberately does NOT expose `.evalx` / `.execx`:
-putting arbitrary Python behind a bot DM is remote code execution with an extra
-hop. Use those from the userbot client, where outgoing=True already proves
-you're the one typing.
-"""
+"""XENO control panel — commands reachable by DMing the assistant bot."""
 import asyncio
 import os
 import sys
@@ -15,6 +8,7 @@ from telethon import Button
 
 import config
 from core import assistant as assistant_mod
+from core import sage
 from core.auth import AMBIENT_FEATURES, ambient_enabled, set_ambient
 from core.command import asst_callback, asst_cmd
 from core.db import get as db_get
@@ -61,6 +55,7 @@ async def panel_start(event):
         f"{_panel_here()}config` — list settings",
         f"{_panel_here()}get <key>` — read one",
         f"{_panel_here()}set <key> <value>` — write one",
+        f"{_panel_here()}theme` — theme picker",
         f"{_panel_here()}ambient` — autonomous handlers (all off by default)",
         f"{_panel_here()}setambient <feature> on|off [everywhere]",
         "",
@@ -79,7 +74,7 @@ async def panel_start(event):
     await event.reply("\n".join(lines), buttons=[
         [Button.inline("Status", data="xeno_status"), Button.inline("Ambient", data="xeno_ambient")],
         [Button.inline("Modules", data="xeno_modules"), Button.inline("Config", data="xeno_config")],
-        [Button.inline("Logs", data="xeno_logs")],
+        [Button.inline("Theme", data="xeno_theme_show"), Button.inline("Logs", data="xeno_logs")],
     ])
 
 
@@ -111,6 +106,12 @@ async def panel_config_button(event):
 async def panel_logs_button(event):
     await event.answer()
     return await logs_cmd(event)
+
+
+@asst_callback("xeno_theme_show")
+async def panel_theme_button(event):
+    await event.answer()
+    return await theme_asst_cmd(event)
 
 
 @asst_cmd("status")
@@ -197,12 +198,15 @@ async def set_cmd(event):
             config.PERSONA = val
         elif key == "AI_ALLOWED_IDS":
             config.AI_ALLOWED_IDS = val
-        else:
-            await db_set("theme:current", val)
+        elif key == "THEME":
+            v = val.lower().strip()
+            if v not in sage.THEMES:
+                names = ", ".join(sage.THEMES.keys())
+                return await event.reply(f"Invalid theme. Valid: {names}")
+            await db_set("theme:current", v)
+            sage.set_theme(v)
+            return await event.reply(f"✅ `{key}` = `{v}`")
     if key == "PREFIXES":
-        # Handlers were bound to the old prefixes when the plugins were
-        # imported, so mutating config.PREFIXES here only changes what .help
-        # *claims* — worse than not applying it at all. Persist for next boot.
         await db_set(key, val)
         return await event.reply(
             f"✅ `{key}` saved as `{val}`.\n"
@@ -226,8 +230,51 @@ async def ambient_cmd(event):
     await event.reply("\n".join(lines))
 
 
-# Distinct name on purpose: sharing "ambient" with the lister above meant
-# `/ambient x on` matched BOTH handlers and printed the list and the receipt.
+@asst_cmd("theme")
+async def theme_asst_cmd(event):
+    current = await db_get("theme:current", "neon")
+    names = list(sage.THEMES)
+    buttons = []
+    row = []
+    for i, n in enumerate(names):
+        row.append(Button.inline(n, data=f"xeno_theme:{n}"))
+        if (i + 1) % 4 == 0:
+            buttons.append(row)
+            row = []
+    if row:
+        buttons.append(row)
+    text = f"🎨 Current theme: `{current}`\nPick a theme below."
+    await event.reply(text, buttons=buttons)
+
+
+@asst_callback("xeno_theme")
+async def theme_asst_callback(event):
+    data = event.data
+    if isinstance(data, bytes):
+        data = data.decode()
+    if ":" not in data:
+        return
+    name = data.split(":", 1)[1].strip().lower()
+    if name not in sage.THEMES:
+        await event.answer("Invalid theme")
+        return
+    await db_set("theme:current", name)
+    sage.set_theme(name)
+    await event.answer(f"Theme → {name}")
+    names = list(sage.THEMES)
+    buttons = []
+    row = []
+    for i, n in enumerate(names):
+        label = f"• {n}" if n == name else n
+        row.append(Button.inline(label, data=f"xeno_theme:{n}"))
+        if (i + 1) % 4 == 0:
+            buttons.append(row)
+            row = []
+    if row:
+        buttons.append(row)
+    await event.edit(f"🎨 Current theme: `{name}`\nPick a theme below.", buttons=buttons)
+
+
 @asst_cmd(r"setambient\s+(\w+)\s+(on|off)(\s+(everywhere))?")
 async def ambient_toggle(event):
     """Toggle an autonomous handler for this chat, or everywhere."""

@@ -36,6 +36,11 @@ async def main():
             log.warning(f"Purged deprecated db key `{key}` from disk.")
     await db_flush()
 
+    # Prime the theme accent cache so ack()/done()/err() are themed from boot.
+    from core import sage
+
+    await sage.load_theme()
+
     # Temporary plugins are session-only by design: wipe any left over from the
     # previous run before anything imports them.
     from core import custom as custom_mod

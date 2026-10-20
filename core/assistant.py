@@ -278,8 +278,11 @@ async def start_assistant(user_client, log_channel=None):
             config.API_HASH,
             retry_delay=1,
             auto_reconnect=True,
+            connection_retries=3,
+            timeout=20,
+            request_retries=3,
         )
-        await client.start(bot_token=token)
+        await asyncio.wait_for(client.start(bot_token=token), timeout=60)
         me = await client.get_me()
     except Exception as e:
         status = f"failed to start ({type(e).__name__}: {e})"

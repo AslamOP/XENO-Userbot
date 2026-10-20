@@ -45,6 +45,9 @@ bot = TelegramClient(
     config.API_HASH,
     retry_delay=1,
     auto_reconnect=True,
+    connection_retries=3,
+    timeout=20,
+    request_retries=3,
 )
 
 

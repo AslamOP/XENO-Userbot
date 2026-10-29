@@ -48,8 +48,12 @@ async def eor(event, text=None, time=None, **kwargs):
     except (ChatWriteForbiddenError, MessageDeleteForbiddenError):
         raise
     except Exception:
-        # Last-ditch: plain reply without extra kwargs.
-        out = await event.reply(text)
+        # Last-ditch: plain reply, no formatting — a stray `*`/backtick in
+        # user-supplied text must not swallow the whole response.
+        try:
+            out = await event.reply(text, parse_mode=None)
+        except Exception:
+            out = await event.reply(text)
 
     if time:
         asyncio.create_task(_auto_delete(out, time))

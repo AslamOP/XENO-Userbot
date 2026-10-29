@@ -49,6 +49,7 @@ bot = TelegramClient(
     timeout=20,
     request_retries=3,
 )
+bot.parse_mode = "md"
 
 
 async def _qr_login(quiet=False):

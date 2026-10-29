@@ -267,8 +267,8 @@ async def _stored_token():
     return await db_get("ASSISTANT_TOKEN", "") or config.BOT_TOKEN
 
 
-_LOGO_PATH = "resources/assistant_logo.jpg"
-_BANNER_PATH = "resources/xeno_banner.jpg"
+_LOGO_PATH = "resources/logo.jpg"
+_BANNER_PATH = "resources/banner.jpg"
 
 
 async def customize(user_client, assistant_client, log_channel=None):
@@ -396,6 +396,7 @@ async def start_assistant(user_client, log_channel=None):
             timeout=20,
             request_retries=3,
         )
+        client.parse_mode = "md"
         await asyncio.wait_for(client.start(bot_token=token), timeout=60)
         me = await client.get_me()
     except Exception as e:
